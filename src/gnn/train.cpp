@@ -22,9 +22,15 @@ int main(int argc, char* argv[]) {
   Model<GCN_layer> model;
   std::cout << "Using Graph Convolutional Network\n";
   #endif
-  model.load_data(argc, argv);
-  evaluate = (bool) atoi(argv[argc-1]);
+
+  GNNTrainingParser parser;
+  std::cout << "Parsing the arguments..." << std::endl;
+  parser.parse_args(argc, argv);
+
+  std::cout << "Loading data..." << std::endl;
+  model.load_data(&parser);
   model.construct_network();
+  
   time_ops[OP_DENSEMM]  = 0.;
   time_ops[OP_SPARSEMM] = 0.;
   time_ops[OP_RELU]     = 0.;
@@ -39,10 +45,7 @@ int main(int argc, char* argv[]) {
   time_ops[OP_SAMPLE]   = 0.;
   time_ops[OP_COPY]     = 0.;
   double t1 = omp_get_wtime();
-  if (evaluate)
-    model.evaluate("test");
-  else
-    model.train();
+  model.train();
   double t2 = omp_get_wtime();
   std::cout << "Total training time (validation time included): " << t2-t1 << " seconds\n";
   

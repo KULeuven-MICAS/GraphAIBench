@@ -8,73 +8,23 @@
 #endif
 
 template <typename gconv_layer>
-void Model<gconv_layer>::load_data(int argc, char* argv[]) {
-  dataset_name = std::string(argv[1]);
-  num_epochs = atoi(argv[2]);
-  num_threads = atoi(argv[3]);
-  omp_set_num_threads(num_threads);
-#ifdef USE_MKL
-  mkl_set_num_threads(num_threads);
-#endif
-  is_sigmoid = std::string(argv[4])=="sigmoid" ? true:false;
-  use_dense = false;
-  use_l2norm = false;
-  arch = gnn_arch::GCN;
-#ifdef USE_GAT
-  arch = gnn_arch::GAT;
-#elif USE_SAGE
-  arch = gnn_arch::SAGE;
-#endif
-
-  feat_drop = 0.;
-  score_drop = 0.;
-  inductive = false;
-  dim_hid = DEFAULT_SIZE_HID;
-  lrate = DEFAULT_RATE_LEARN;
-  num_layers = DEFAULT_NUM_LAYER;
-  subg_size = 0;
-  val_interval = EVAL_INTERVAL;
-  if (argc == 6) {
-    dim_hid = atoi(argv[5]);
-  } else if (argc == 7) {
-    dim_hid = atoi(argv[5]);
-    score_drop = atof(argv[6]);
-  } else if (argc == 8) {
-    dim_hid = atoi(argv[5]);
-    score_drop = atof(argv[6]);
-    feat_drop = atof(argv[7]);
-  } else if (argc == 9) {
-    dim_hid = atoi(argv[5]);
-    score_drop = atof(argv[6]);
-    feat_drop = atof(argv[7]);
-    lrate = atof(argv[8]);
-  } else if (argc > 9) {
-    assert(argc == 13);
-    dim_hid = atoi(argv[5]);
-    score_drop = atof(argv[6]);
-    feat_drop = atof(argv[7]);
-    lrate = atof(argv[8]);
-    num_layers = atoi(argv[9]);
-    subg_size = atoi(argv[10]);
-    val_interval = atoi(argv[11]);
-    inductive = atoi(argv[12]);
-  }
-  assert(num_layers >= 2);
-
-  printf("Dataset name= %s\n",             dataset_name.c_str());
-  printf("Number of threads= %d\n",        num_threads);
-  printf("Number of layers= %d\n",         num_layers);
-  printf("Number of epochs= %d\n",         num_epochs);
-  printf("Sigmoid= %d\n",                  is_sigmoid);
-  printf("Dense layers= %d\n",             use_dense);
-  printf("L2 Norm= %d\n",                  use_l2norm);
-  printf("Feature dropout= %f\n",          feat_drop);
-  printf("Score dropaout= %f\n",           score_drop);
-  printf("Inductive training= %d\n",       inductive);
-  printf("Hidden layer dimention= %d\n",   dim_hid);
-  printf("Learning rate= %f\n",            lrate);
-  printf("Subgraph size= %d\n",            subg_size);
-  printf("Evaluation interval= %d\n",      val_interval);
+void Model<gconv_layer>::load_data(GNNTrainingParser *p){
+    //embedding the parser
+    dataset_name    = p->args.dataset_path;
+    num_epochs      = p->args.num_epochs;
+    num_threads     = p->args.num_threads;
+    is_sigmoid      = p->args.is_sigmoid;
+    use_dense       = p->args.use_dense;
+    use_l2norm      = p->args.use_l2norm;
+    arch            = p->args.arch;
+    dim_hid         = p->args.dim_hid;
+    score_drop      = p->args.score_drop;
+    feat_drop       = p->args.feat_drop;
+    lrate           = p->args.lrate;
+    num_layers      = p->args.num_layers;
+    subg_size       = p->args.subg_size;
+    val_interval    = p->args.eval_interval;
+    inductive       = p->args.inductive;
 
   // l2norm+dense layer is useful for sampling and GAT
   if (subg_size > 0 || arch == gnn_arch::GAT) use_l2norm = true;
@@ -86,6 +36,7 @@ void Model<gconv_layer>::load_data(int argc, char* argv[]) {
 #endif
   full_graph = new Graph(use_gpu);
   auto reader = new Reader(dataset_name);
+  reader->set_dataset();
   reader->readGraphFromGRFile(full_graph);
   num_samples = full_graph->size();
   //full_graph->print_graph();

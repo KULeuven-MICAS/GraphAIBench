@@ -4,6 +4,7 @@
 #include "dense_layer.h"
 #include "loss_layer.h"
 #include "sampler.h"
+#include "parser.h"
 
 template <typename gconv_layer>
 class Model {
@@ -15,7 +16,7 @@ class Model {
     acc_t forward_prop(acc_t& loss);
     acc_t evaluate(std::string type);
     void backward_prop();
-    void load_data(int argc, char* argv[]);
+    void load_data(GNNTrainingParser *p);
     void construct_network();
     void train();
     void update_weights(optimizer* opt);

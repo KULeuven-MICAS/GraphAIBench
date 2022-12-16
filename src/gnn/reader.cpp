@@ -9,6 +9,16 @@
 #include <fstream>
 #include <cassert>
 
+void Reader::set_dataset(){
+    std::string dataset_temp;
+    dataset_temp = dataset_path;
+    if (dataset_path.back() == '/') dataset_temp.pop_back();
+    else dataset_path = dataset_path + '/';
+    std::cout << "DEBUG: " <<  dataset_temp << std::endl;
+    dataset = dataset_temp.substr( dataset_temp.find_last_of('/')+1);
+    std::cout << "DEBUG: " << dataset << '\t' << dataset_temp << std::endl;
+}
+
 // labels contain the ground truth (e.g. vertex classes) for each example
 // (num_examples x 1). Note that labels is not one-hot encoded vector and it can
 // be computed as y.argmax(axis=1) from one-hot encoded vector (y) of labels if
@@ -16,7 +26,7 @@
 size_t Reader::read_labels(std::vector<label_t>& labels, bool is_single_class) {
   Timer t_read;
   t_read.Start();
-  std::string filename = path + dataset_str + "-labels.txt";
+  std::string filename = dataset_path + dataset + "-labels.txt";
   std::ifstream in;
   std::string line;
   in.open(filename, std::ios::in);
@@ -62,11 +72,11 @@ size_t Reader::read_features(std::vector<float>& feats, std::string filetype) {
   Timer t_read;
   t_read.Start();
   size_t m, feat_len; // m = number of vertices
-  std::string filename = path + dataset_str + ".ft";
+  std::string filename = dataset_path + dataset + ".ft";
   std::ifstream in;
 
   if (filetype == "bin") {
-    std::string file_dims = path + dataset_str + "-dims.txt";
+    std::string file_dims = dataset_path + dataset + "-dims.txt";
     std::ifstream ifs;
     ifs.open(file_dims, std::ios::in);
     ifs >> m >> feat_len >> std::ws;
@@ -78,7 +88,7 @@ size_t Reader::read_features(std::vector<float>& feats, std::string filetype) {
   std::cout << "N x D: " << m << " x " << feat_len << "\n";
   feats.resize(m*feat_len);
   if (filetype == "bin") {
-    filename = path + dataset_str + "-feats.bin";
+    filename = dataset_path + dataset + "-feats.bin";
     in.open(filename, std::ios::binary | std::ios::in);
     in.read((char*)&feats[0], sizeof(float) * m * feat_len);
   } else {
@@ -104,24 +114,9 @@ size_t Reader::read_features(std::vector<float>& feats, std::string filetype) {
 //! set to create mask from
 size_t Reader::read_masks(std::string mask_type, size_t n, size_t& begin,
                           size_t& end, mask_t* masks) {
-  bool dataset_found = false;
-  
-  std::string dataset_name;
-  dataset_name = dataset_str.substr( dataset_str.find_last_of("/")+1);
-  //std::cout << dataset_name << std::endl;
-  for (int i = 0; i < NUM_DATASETS; i++) {
-    if (dataset_name == dataset_names[i]) {
-      dataset_found = true;
-      break;
-    }
-  }
-  if (!dataset_found) {
-    std::cout << "Dataset currently not supported\n";
-    exit(1);
-  }
   size_t i             = 0;
   size_t sample_count  = 0;
-  std::string filename = path + dataset_str + "-" + mask_type + "_mask.txt";
+  std::string filename = dataset_path + dataset + "-" + mask_type + "_mask.txt";
   // std::cout << "Reading " << filename << "\n";
   std::ifstream in;
   std::string line;
@@ -160,7 +155,7 @@ void Reader::progressPrint(unsigned max, unsigned i) {
 
 void Reader::readGraphFromGRFile(LearningGraph* g) {
   std::cout << "Reading graph into CPU memory\n";
-  std::string filename = path + dataset_str + ".csgr";
+  std::string filename = dataset_path + dataset + ".csgr";
   std::ifstream ifs;
   ifs.open(filename);
   int masterFD = open(filename.c_str(), O_RDONLY);

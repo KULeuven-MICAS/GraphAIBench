@@ -62,7 +62,7 @@ COMMON_CUOBJS = graph_conv_layer.cu.o lgraph.cu.o
 UTIL_CUOBJS = math_functions.cu.o optimizer.cu.o
 UTIL_CXXOBJS = math_functions.o optimizer.o
 LAYER_OBJS = l2norm_layer.o dense_layer.o
-COMMON_OBJS = reader.o loss_layer.o net.o sampler.o random.o
+COMMON_OBJS = parser.o reader.o loss_layer.o net.o sampler.o random.o
 
 ifeq ($(USE_GPU), 1)
   LAYER_OBJS += $(LAYER_CUOBJS)
