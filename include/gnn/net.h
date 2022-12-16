@@ -81,4 +81,3 @@ class Model {
     label_t* d_labels_subg;    // labels for subgraph on device
     float* d_feats_subg;       // input features for subgraph on device
 };
-

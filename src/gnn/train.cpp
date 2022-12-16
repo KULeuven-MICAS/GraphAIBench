@@ -1,13 +1,15 @@
 #include "utils.h"
 #include "net.h"
+
 std::map<char,double> time_ops;
+bool evaluate = false;
 
 int main(int argc, char* argv[]) {
   if (argc <= 4 || (argc>9 && argc!=13)) {
     std::cout << "Usage: ./train data num_epochs num_threads type_loss "
               << "hidden(16) score_drop_rate(0.) feat_drop_rate(0.) "
-              << "learnng_rate(0.01) num_layers(2) subg_size(0) val_interval(50) inductive(0)\n"
-              << "Example: ./bin/cpu_train_gcn citeseer 10 2 softmax\n";
+              << "learnng_rate(0.01) num_layers(2) subg_size(0) val_interval(50) inductive(0) evaluate\n"
+              << "Example: ./bin/cpu_train_gcn citeseer 10 2 softmax 0\n";
     exit(1);
   }
   #ifdef USE_GAT
@@ -21,6 +23,7 @@ int main(int argc, char* argv[]) {
   std::cout << "Using Graph Convolutional Network\n";
   #endif
   model.load_data(argc, argv);
+  evaluate = (bool) atoi(argv[argc-1]);
   model.construct_network();
   time_ops[OP_DENSEMM]  = 0.;
   time_ops[OP_SPARSEMM] = 0.;
@@ -36,7 +39,10 @@ int main(int argc, char* argv[]) {
   time_ops[OP_SAMPLE]   = 0.;
   time_ops[OP_COPY]     = 0.;
   double t1 = omp_get_wtime();
-  model.train();
+  if (evaluate)
+    model.evaluate("test");
+  else
+    model.train();
   double t2 = omp_get_wtime();
   std::cout << "Total training time (validation time included): " << t2-t1 << " seconds\n";
   

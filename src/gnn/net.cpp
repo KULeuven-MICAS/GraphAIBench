@@ -61,6 +61,21 @@ void Model<gconv_layer>::load_data(int argc, char* argv[]) {
   }
   assert(num_layers >= 2);
 
+  printf("Dataset name= %s\n",             dataset_name.c_str());
+  printf("Number of threads= %d\n",        num_threads);
+  printf("Number of layers= %d\n",         num_layers);
+  printf("Number of epochs= %d\n",         num_epochs);
+  printf("Sigmoid= %d\n",                  is_sigmoid);
+  printf("Dense layers= %d\n",             use_dense);
+  printf("L2 Norm= %d\n",                  use_l2norm);
+  printf("Feature dropout= %f\n",          feat_drop);
+  printf("Score dropaout= %f\n",           score_drop);
+  printf("Inductive training= %d\n",       inductive);
+  printf("Hidden layer dimention= %d\n",   dim_hid);
+  printf("Learning rate= %f\n",            lrate);
+  printf("Subgraph size= %d\n",            subg_size);
+  printf("Evaluation interval= %d\n",      val_interval);
+
   // l2norm+dense layer is useful for sampling and GAT
   if (subg_size > 0 || arch == gnn_arch::GAT) use_l2norm = true;
   if (use_l2norm) use_dense = true;

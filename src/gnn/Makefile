@@ -6,7 +6,7 @@ NVCC=nvcc
 IDIR=../../include/gnn
 ODIR=./obj
 CULIBS=-lcudart -lcublas -lcusparse -lcurand
-CFLAGS=$(INCLUDES) -fopenmp -pthread -Wall --std=c++11 -lboost_thread -lboost_system 
+CFLAGS=$(INCLUDES) -fopenmp -pthread -Wall --std=c++11 -lboost_thread -lboost_system -fsanitize=address
 INCLUDES=-I$(CUDA_HOME)/include -I${OPENBLAS_DIR}/include -I../../include -I../../include/gnn -I../../include/layers -I../../include/utils
 CUFLAGS=$(INCLUDES) -DENABLE_GPU $(CULIBS) -lboost_thread -lboost_system
 
@@ -50,6 +50,7 @@ ifeq ($(USE_MKL), 1)
 	CFLAGS += -DUSE_MKL -L${MKLROOT}/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -I${MKL_DIR}/include -L${MKL_DIR}/lib/intel64 -liomp5
 else
 	CFLAGS += -I${OPENBLAS_DIR}/include -L$(OPENBLAS_DIR)/lib -lopenblas
+#	CFLAGS += -I${OPENBLAS_DIR}/include -L$(OPENBLAS_DIR)/lib 
 endif
 
 GNN_LAYER_CUOBJS = gcn_layer.cu.o gcn_aggregator.cu.o gat_layer.cu.o gat_aggregator.cu.o sage_layer.cu.o sage_aggregator.cu.o

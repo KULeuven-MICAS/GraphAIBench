@@ -105,8 +105,12 @@ size_t Reader::read_features(std::vector<float>& feats, std::string filetype) {
 size_t Reader::read_masks(std::string mask_type, size_t n, size_t& begin,
                           size_t& end, mask_t* masks) {
   bool dataset_found = false;
+  
+  std::string dataset_name;
+  dataset_name = dataset_str.substr( dataset_str.find_last_of("/")+1);
+  //std::cout << dataset_name << std::endl;
   for (int i = 0; i < NUM_DATASETS; i++) {
-    if (dataset_str == dataset_names[i]) {
+    if (dataset_name == dataset_names[i]) {
       dataset_found = true;
       break;
     }

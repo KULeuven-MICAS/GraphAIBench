@@ -16,6 +16,9 @@ void GCN_layer::forward(float* feat_out) {
     dropout_cpu(x, y, feat_scale, feat_dropout_rate, in_data, dropout_mask, &in_temp[0]);
     in_data = &in_temp[0]; 
   }
+  std::cout << "DEBUG: " << "GCN_layer::forward: params:\t" << "x:" << x << "\ty:" << z << "\tz:" << y << std::endl;
+  std::cout << "DEBUG: " << "GCN_layer::forward: expected size:\t" << "C:" << x*z << "\tB:" << z*y << "\tA:" << x*y << std::endl;
+  std::cout << "DEBUG: " << "GCN_layer::forward: arrays:\t" << "C:" << sizeof(out_temp)/sizeof(out_temp[0]) << "\tB:" << sizeof(W_neigh)/sizeof(W_neigh[0]) << "\tA:" << sizeof(in_data)/sizeof(in_data[0]) << std::endl;
   if (y > z) {
     matmul(x, z, y, in_data, &W_neigh[0], &out_temp[0]); // x*y; y*z; x*z
     aggr.aggregate(z, *graph, &out_temp[0], feat_out); // x*x; x*z; x*z

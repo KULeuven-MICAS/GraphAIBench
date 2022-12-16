@@ -7,8 +7,8 @@ private:
   void progressPrint(unsigned maxi, unsigned i);
 
 public:
-  Reader() : dataset_str("") {}
-  Reader(std::string dataset) : dataset_str(dataset) {}
+  Reader()                    : dataset_str("")       {}
+  Reader(std::string dataset) : dataset_str(dataset)  {}
   void init(std::string dataset) { dataset_str = dataset; }
   size_t read_labels(std::vector<label_t>& labels, bool is_single_class = true);
   size_t read_features(std::vector<float>& feats, std::string filetype = "bin");

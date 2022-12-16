@@ -6,7 +6,9 @@ graph_conv_layer<Aggregator>::graph_conv_layer(int id, int nv, int din, int dout
                       bool act, bool concat, float lr, float feat_drop, float score_drop) :
     level_(id), num_samples(nv), dim_in(din), dim_out(dout), graph(g), is_act(act),
     is_bias(false), use_concat(concat), feat_dropout_rate(feat_drop), score_dropout_rate(score_drop) {
-  //std::cout << "GCN Layer " << level_ << " allocating memory: [" << num_samples << " x " << dim_in << "]\n";
+  //std::cout << "DEBUG: " << "GCN Layer " << level_ << " allocating memory: [" << num_samples << " x " << dim_in << "]" << std::endl;
+	//std::cout << "\tID: " << id << "\t NV: " << nv << std::endl; 
+	//std::cout << "\tC: "  << din << "\t K: " << dout << std::endl;
   int z = dim_out;
   W_neigh.resize(dim_in*z);
   W_neigh_grad.resize(dim_in*z);
