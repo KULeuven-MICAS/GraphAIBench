@@ -72,28 +72,28 @@ void clFree(cl_mem ob) throw(std::string) {
 }
 
 void clReallocRO(cl_mem ob, int size, void *h_mem_ptr) throw(std::string) {
-    _clFree(ob);
+    clFree(ob);
 #ifdef ERRMSG
   	if (oclHandles.cl_status != CL_SUCCESS)
     	throw(std::string("excpetion in _clReallocateRO()"));
 #endif
-  	ob = _clMallocRO(size, h_mem_ptr);
+  	ob = clMallocRO(size, h_mem_ptr);
 }
 void clReallocWO(cl_mem ob, int size) throw(std::string) {
-    _clFree(ob);
+    clFree(ob);
 #ifdef ERRMSG
   	if (oclHandles.cl_status != CL_SUCCESS)
     	throw(std::string("excpetion in _clReallocateWO()"));
 #endif
-  	ob = _clMallocWO(size);
+  	ob = clMallocWO(size);
 }
 void clReallocRW(cl_mem ob, int size, void *h_mem_ptr) throw(std::string) {
-    _clFree(ob);
+    clFree(ob);
 #ifdef ERRMSG
   	if (oclHandles.cl_status != CL_SUCCESS)
     	throw(std::string("excpetion in _clReallocateRW()"));
 #endif
-  	ob = _clMallocRW(size, h_mem_ptr);
+  	ob = clMallocRW(size, h_mem_ptr);
 }
 
 //--transfer data from host to device
@@ -144,15 +144,15 @@ void clMemcpyD2H(cl_mem d_mem, int size, void *h_mem) throw(std::string) {
 
 template <typename T>
 void clInitConstMem(int size, T initValue, cl_mem d_mem_ptr) throw(std::string) {
-    oclHandles.cl_status = clEnqueueWriteBuffer(command_queue   =oclHandles.queue,
-                                                buffer          =d_mem_ptr,
-                                                pattern         =&initValue,
-                                                pattern_size    =sizeof(T),
-                                                offset          =0, 
-                                                size            =size,
-                                                num_events_in_wait_list =0,
-                                                event_wait_list =NULL, 
-                                                event           =&(oclHandles.event));
+    oclHandles.cl_status = clEnqueueWriteBuffer(oclHandles.queue,
+                                                d_mem_ptr,
+                                                &initValue,
+                                                sizeof(T),
+                                                0, 
+                                                size,
+                                                0,
+                                                NULL, 
+                                                &(oclHandles.event));
     cl_int cl_status = clWaitForEvents(1, &(oclHandles.event));
 #ifdef ERRMSG
     if (oclHandles.cl_status != CL_SUCCESS || cl_status != CL_SUCCESS)
@@ -164,7 +164,8 @@ template<typename T>
 T random(T range_from, T range_to) {
     std::random_device                  rand_dev;
     std::mt19937                        generator(rand_dev());
-    std::uniform_int_distribution<T>    distr(range_from, range_to);
+    std::uniform_real_distribution<T>    distr(range_from, range_to);
+    //can be also std::uniform_int_distribution<T>
     return distr(generator);
 }
 void clInitRangeUniformMem(int size, const float_t a, const float_t b, cl_mem d_mem_ptr) throw(std::string) {
@@ -172,7 +173,7 @@ void clInitRangeUniformMem(int size, const float_t a, const float_t b, cl_mem d_
     for (int i = 0; i < size; i++) {
       	rn[i] = random<float>(a, b);
     }
-    _clMemcpyH2D(d_mem_ptr, size * sizeof(float_t), rn);
+    clMemcpyH2D(d_mem_ptr, size * sizeof(float_t), rn);
 }
 
 int read_kernel_file(const char* filename, uint8_t** data, size_t* size) {
@@ -248,7 +249,7 @@ void clRelease() {
     if (oclHandles.kernel[nKernel] != NULL) {
       cl_int resultCL = clReleaseKernel(oclHandles.kernel[nKernel]);
       if (resultCL != CL_SUCCESS) {
-        cerr << "ReleaseCL()::Error: In clReleaseKernel" << endl;
+        std::cerr << "ReleaseCL()::Error: In clReleaseKernel" << std::endl;
         errorFlag = true;
       }
       oclHandles.kernel[nKernel] = NULL;
@@ -259,7 +260,7 @@ void clRelease() {
   if (oclHandles.program != NULL) {
     cl_int resultCL = clReleaseProgram(oclHandles.program);
     if (resultCL != CL_SUCCESS) {
-      cerr << "ReleaseCL()::Error: In clReleaseProgram" << endl;
+      std::cerr << "ReleaseCL()::Error: In clReleaseProgram" << std::endl;
       errorFlag = true;
     }
     oclHandles.program = NULL;
@@ -269,7 +270,7 @@ void clRelease() {
   if (oclHandles.queue != NULL) {
     cl_int resultCL = clReleaseCommandQueue(oclHandles.queue);
     if (resultCL != CL_SUCCESS) {
-      cerr << "ReleaseCL()::Error: In clReleaseCommandQueue" << endl;
+      std::cerr << "ReleaseCL()::Error: In clReleaseCommandQueue" << std::endl;
       errorFlag = true;
     }
     oclHandles.queue = NULL;
@@ -279,7 +280,7 @@ void clRelease() {
   if (oclHandles.context != NULL) {
     cl_int resultCL = clReleaseContext(oclHandles.context);
     if (resultCL != CL_SUCCESS) {
-      cerr << "ReleaseCL()::Error: In clReleaseContext" << endl;
+      std::cerr << "ReleaseCL()::Error: In clReleaseContext" << std::endl;
       errorFlag = true;
     }
     oclHandles.context = NULL;
@@ -289,7 +290,7 @@ void clRelease() {
   if (oclHandles.devices != NULL) {
     cl_int resultCL = clReleaseDevice(oclHandles.devices[0]);
     if (resultCL != CL_SUCCESS) {
-      cerr << "ReleaseCL()::Error: In clReleaseDevice" << endl;
+      std::cerr << "ReleaseCL()::Error: In clReleaseDevice" << std::endl;
       errorFlag = true;
     }
     free(oclHandles.devices);
@@ -300,7 +301,7 @@ void clRelease() {
     throw(std::string("ReleaseCL()::Error encountered."));
 }
 
-void clSetArgs(int kernel_id, int arg_idx, void *d_mem, int size = 0) throw(std::string) {
+void clSetArgs(int kernel_id, int arg_idx, void *d_mem, int size /*= 0*/) throw(std::string) {
   if (!size) {
     oclHandles.cl_status = clSetKernelArg(oclHandles.kernel[kernel_id], arg_idx, sizeof(d_mem), &d_mem);
 #ifdef ERRMSG
@@ -383,7 +384,7 @@ void clLoadProgram(const char* filename, std::string kernel_name) {
 	uint8_t* kernel_bin = NULL;
 	size_t kernel_size;
 	cl_int binary_status = 0, resultCL = 0;
-	if (read_kernel_file(filename, &data, &size) != 0) throw(std::string("exception in clLoadProgram -> read_kernel_file"));
+	if (read_kernel_file(filename, &kernel_bin, &kernel_size) != 0) throw(std::string("exception in clLoadProgram -> read_kernel_file"));
 
 	oclHandles.program = clCreateProgramWithBinary(oclHandles.context, 1, &oclHandles.devices[DEVICE_ID_INUSED], &kernel_size, (const uint8_t**)&kernel_bin, &binary_status, &resultCL);
 	if ((resultCL != CL_SUCCESS) || (oclHandles.program == NULL)) throw(std::string("InitCL()::Error: Loading Binary into cl_program. (clCreateProgramWithBinary)"));
@@ -414,7 +415,7 @@ void clLoadProgram(const char* filename, std::string kernel_name) {
 	//Single kernel launch
 	cl_kernel kernel = clCreateKernel(oclHandles.program, kernel_name.c_str(), &resultCL);
     if ((resultCL != CL_SUCCESS) || (kernel == NULL)) {
-      	sts::string errorMsg = "InitCL()::Error: Creating Kernel (clCreateKernel) \"" + kernel_name + "\"";
+      	std::string errorMsg = "InitCL()::Error: Creating Kernel (clCreateKernel) \"" + kernel_name + "\"";
       	throw(errorMsg);
 	}
 	oclHandles.kernel.push_back(kernel);
@@ -423,14 +424,11 @@ void clLoadProgram(const char* filename, std::string kernel_name) {
 }
 
 //--enqueue kernel execution
-void clInvokeKernel(int kernel_id, int g_work_size, int l_work_size) throw(std::string) {
-  	cl_uint work_dim = 1; //make this more general!
-  	if (work_items % work_group_size != 0) // process situations that work_items cannot be divided by work_group_size
-    	work_items = work_items + (work_group_size - (work_items % work_group_size));
-  	size_t local_work_size = work_group_size;
-  	size_t global_work_size = g_work_size;
-	;
-  	oclHandles.cl_status = clEnqueueNDRangeKernel( oclHandles.queue, oclHandles.kernel[kernel_id], work_dim, 0, global_work_size, local_work_size, 0, 0, NULL);
+void clInvokeKernel(int kernel_id, cl_uint work_dim, size_t* g_work_size, size_t* l_work_size) throw(std::string) {
+  //check on local and global work size is missing here... an improvement could be to add it
+  //size_t local_work_size[work_dim] = l_work_size;
+  //size_t global_work_size[work_dim] = g_work_size;
+	oclHandles.cl_status = clEnqueueNDRangeKernel( oclHandles.queue, oclHandles.kernel[kernel_id], work_dim, 0, g_work_size, l_work_size, 0, 0, NULL);
 #ifdef ERRMSG
   oclHandles.error_str = "excpetion in _clInvokeKernel() -> ";
   switch (oclHandles.cl_status) {

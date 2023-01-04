@@ -7,7 +7,6 @@ USE_GPU ?= 0
 LLVM_PREFIX ?= /opt/llvm-riscv
 RISCV_TOOLCHAIN_PATH ?= /opt/riscv-gnu-toolchain
 SYSROOT ?= $(RISCV_TOOLCHAIN_PATH)/riscv32-unknown-elf
-DMP = $(RISCV_TOOLCHAIN_PATH)/bin/riscv32-unknown-elf-objdump
 
 POCL_CC_PATH ?= /opt/pocl/compiler
 POCL_RT_PATH ?= /opt/pocl/runtime

@@ -1,8 +1,10 @@
 #pragma once
 
+#include <random>
 #include <CL/cl.h>
 #include "global.h"
 
+extern struct oclHandleStruct oclHandles;
 struct oclHandleStruct {
   cl_context context;
   cl_device_id *devices;
@@ -25,8 +27,12 @@ void clMemcpyH2D(cl_mem d_mem, int size, const void *h_mem_ptr) throw(std::strin
 void clMemcpyD2H(cl_mem d_mem, int size, void *h_mem) throw(std::string);
 template <typename T>
 void clInitConstMem(int size, T initValue, cl_mem d_mem_ptr) throw(std::string);
+template<typename T>
+T random(T range_from, T range_to);
 void clInitRangeUniformMem(int size, const float_t a, const float_t b, cl_mem d_mem_ptr) throw(std::string);
 
 void clInit();
 void clRelease();
 void clSetArgs(int kernel_id, int arg_idx, void *d_mem, int size = 0) throw(std::string);
+void clLoadProgram(const char* filename, std::string kernel_name);
+void clInvokeKernel(int kernel_id, cl_uint work_dim, size_t* g_work_size, size_t* l_work_size) throw(std::string);
