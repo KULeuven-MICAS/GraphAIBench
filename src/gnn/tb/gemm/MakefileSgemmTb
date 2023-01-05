@@ -27,7 +27,7 @@ CXX=g++
 NVCC=nvcc
 IDIR=../../../include/gnn
 INCLUDES=-I../../../include/utils -I../../../include/gnn
-CFLAGS=$(INCLUDES) -fopenmp -pthread -Wall --std=c++11 -lboost_thread -lboost_system -fsanitize=address
+CFLAGS=$(INCLUDES) -fopenmp -pthread -Wall --std=c++11 -lboost_thread -lboost_system -DERRMSG #-fsanitize=address 
 
 VPATH += ../cl_utils
 
@@ -56,3 +56,10 @@ sgemm.pocl: ../cl_kernels/sgemm.cl
 prova: sgemm_prova.cpp $(OBJ)
 	@mkdir -p $(BIN_DIR)
 	$(CXX) -o $(BIN_DIR)/$@ $^ $(CFLAGS)
+
+run: prova sgemm.pocl 
+	LD_LIBRARY_PATH=$(POCL_RT_PATH)/lib:$(VORTEX_DRV_PATH)/simx:$(LD_LIBRARY_PATH) $(BIN_DIR)/prova -n32 -b16
+
+.PHONY: clean
+clean:
+	rm -rf $(ODIR)/*.o  $(BIN_DIR)/*

@@ -1,4 +1,5 @@
 #include "graph_conv_layer.h"
+#include "cl_utils.h"
 
 template <typename Aggregator>
 graph_conv_layer<Aggregator>::graph_conv_layer(int id, int nv, int din, int dout, 
@@ -11,8 +12,8 @@ graph_conv_layer<Aggregator>::graph_conv_layer(int id, int nv, int din, int dout
     auto z = dim_out;
     auto init_range = sqrt(6.0 / (y + z));
     
-    _clMallocRW(x * y, d_in_temp);
-    _clMallocRW(x * z, d_out_temp);
+    d_in_temp = clMallocRW(x * y);
+    d_out_temp = clMallocRW(x * z);
     clInitConstMem<float>(x * y, 0.0, d_in_temp);
     clInitConstMem<float>(x * z, 0.0, d_out_temp);
     if (y <= z){

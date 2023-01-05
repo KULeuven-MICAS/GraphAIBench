@@ -12,22 +12,31 @@ int DEVICE_ID_INUSED = 0; // deviced id used (default : 0)
 cl_uint deviceListSize = 1;
 
 //--create read only buffer for devices
-cl_mem clMallocRW(int size, void *h_mem_ptr) throw(std::string) {
+cl_mem clMallocRW(int size, bool init, void *h_mem_ptr) throw(std::string) {
   cl_mem d_mem;
-  d_mem = clCreateBuffer(oclHandles.context,
-                         CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, size,
-                         h_mem_ptr, &oclHandles.cl_status);
-#ifdef ERRMSG
+  cl_mem_flags flags = (init) ? CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR : CL_MEM_READ_WRITE;
+
+  d_mem = clCreateBuffer(oclHandles.context,      //context
+                         flags,                   //flags
+                         size,                    //size
+                         h_mem_ptr,               //*host ptr
+                         &oclHandles.cl_status);  //*errcode_ret
+
+ #ifdef ERRMSG
   if (oclHandles.cl_status != CL_SUCCESS)
     throw(std::string("exception in _clMallocRW"));
 #endif
   return d_mem;
 }
 //--create write only buffer for devices
-cl_mem clMallocWO(int size) throw(std::string) {
+cl_mem clMallocWO(int size, bool init, void *h_mem_ptr) throw(std::string) {
   cl_mem d_mem;
-  d_mem = clCreateBuffer(oclHandles.context, CL_MEM_WRITE_ONLY, size, 0,
-                         &oclHandles.cl_status);
+  cl_mem_flags flags = (init) ? CL_MEM_WRITE_ONLY | CL_MEM_COPY_HOST_PTR : CL_MEM_WRITE_ONLY;
+  d_mem = clCreateBuffer(oclHandles.context,      //context
+                         flags,                   //flags
+                         size,                    //size
+                         h_mem_ptr,               //*host ptr
+                         &oclHandles.cl_status);  //*errcode_ret
 #ifdef ERRMSG
   if (oclHandles.cl_status != CL_SUCCESS)
     throw(std::string("exception in _clMallocWO()"));
@@ -35,14 +44,20 @@ cl_mem clMallocWO(int size) throw(std::string) {
   return d_mem;
 }
 //--create read write buffer for devices
-cl_mem clMallocRO(int size, void *h_mem_ptr) throw(std::string) {
+cl_mem clMallocRO(int size, bool init, void *h_mem_ptr) throw(std::string) {
   cl_mem d_mem;
-  d_mem = clCreateBuffer(oclHandles.context,
-                         CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, size,
-                         h_mem_ptr, &oclHandles.cl_status);
+  cl_mem_flags flags = (init) ? CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR : CL_MEM_READ_ONLY;
+  d_mem = clCreateBuffer(oclHandles.context,      //context
+                         flags,                   //flags
+                         size,                    //size
+                         h_mem_ptr,               //*host ptr
+                         &oclHandles.cl_status);  //*errcode_ret
 #ifdef ERRMSG
-  if (oclHandles.cl_status != CL_SUCCESS)
+  if (oclHandles.cl_status != CL_SUCCESS){
+    std::cout << "cl_status: " << oclHandles.cl_status << std::endl;
+    std::cout << "exception in _clMallocRO" << std::endl;
     throw(std::string("exception in _clMallocRO"));
+  }
 #endif
   return d_mem;
 }
@@ -213,12 +228,12 @@ void clInit(){
 	std::cout << "Finding the available platforms and select one..." << std::endl;
 	
 	cl_uint numPlatforms = 1; // Default: 1 -- only one platform
-  	cl_platform_id *allPlatforms = (cl_platform_id *)malloc(numPlatforms * sizeof(cl_platform_id));
-
-  	oclHandles.cl_status = clGetPlatformIDs(numPlatforms, allPlatforms, NULL);
-  	if (resultCL != CL_SUCCESS) throw(std::string("InitCL()::Error: Getting platform ids (clGetPlatformIDs)"));
+  cl_platform_id *allPlatforms = (cl_platform_id *)malloc(numPlatforms * sizeof(cl_platform_id));
+  oclHandles.cl_status = clGetPlatformIDs(numPlatforms, allPlatforms, NULL);
+  
+  if (oclHandles.cl_status != CL_SUCCESS) throw(std::string("InitCL()::Error: Getting platform ids (clGetPlatformIDs)"));
   	// Select the target platform. Default: first platform
-  	targetPlatform = allPlatforms[0];
+  targetPlatform = allPlatforms[0];
 
 	//---------------------------------------------------------------------------
 	std::cout << "Allocating the device list..." << std::endl;
@@ -238,7 +253,12 @@ void clInit(){
 	std::cout << "Creating the command queue..." << std::endl;
 
 	oclHandles.queue = clCreateCommandQueue(oclHandles.context, oclHandles.devices[DEVICE_ID_INUSED], 0, &resultCL);
-  	if ((resultCL != CL_SUCCESS) || (oclHandles.queue == NULL)) throw(std::string("InitCL()::Creating Command Queue. (clCreateCommandQueue)"));
+  	if ((resultCL != CL_SUCCESS) || (oclHandles.queue == NULL)) {
+      std::cerr << "InitCL()::Error: Creating Command Queue. (clCreateCommandQueue)" << std::endl;
+      std::cerr << "Error code: " << resultCL << std::endl;
+      if (oclHandles.queue == NULL) std::cerr << "Queue is NULL " << std::endl;
+      throw(std::string("InitCL()::Creating Command Queue. (clCreateCommandQueue)"));
+    }
 }
 
 // release CL objects
@@ -302,8 +322,13 @@ void clRelease() {
 }
 
 void clSetArgs(int kernel_id, int arg_idx, void *d_mem, int size /*= 0*/) throw(std::string) {
+  //std::cout << "DEBUG::clSetKernelArg() " << std::endl;
+  //std::cout << "DEBUG::kernel_id " << kernel_id << std::endl;
+  //std::cout << "DEBUG::arg_idx " << arg_idx << std::endl;
+  //std::cout << "DEBUG::d_mem " << d_mem << std::endl;
+  //std::cout << "DEBUG::size " << size << std::endl;
   if (!size) {
-    oclHandles.cl_status = clSetKernelArg(oclHandles.kernel[kernel_id], arg_idx, sizeof(d_mem), &d_mem);
+    oclHandles.cl_status = clSetKernelArg(oclHandles.kernel[kernel_id], arg_idx, sizeof(d_mem), d_mem);
 #ifdef ERRMSG
     oclHandles.error_str = "excpetion in _clSetKernelArg() ";
     switch (oclHandles.cl_status) {
@@ -336,11 +361,11 @@ void clSetArgs(int kernel_id, int arg_idx, void *d_mem, int size /*= 0*/) throw(
       break;
     }
     if (oclHandles.cl_status != CL_SUCCESS)
+      std::cout << oclHandles.error_str << std::endl;
       throw(oclHandles.error_str);
 #endif
   } else {
-    oclHandles.cl_status =
-        clSetKernelArg(oclHandles.kernel[kernel_id], arg_idx, size, d_mem);
+    oclHandles.cl_status = clSetKernelArg(oclHandles.kernel[kernel_id], arg_idx, size, d_mem);
 #ifdef ERRMSG
     oclHandles.error_str = "excpetion in _clSetKernelArg() ";
     switch (oclHandles.cl_status) {
@@ -372,8 +397,10 @@ void clSetArgs(int kernel_id, int arg_idx, void *d_mem, int size /*= 0*/) throw(
       oclHandles.error_str += "Unknown reason";
       break;
     }
-    if (oclHandles.cl_status != CL_SUCCESS)
+    if (oclHandles.cl_status != CL_SUCCESS){
+      std::cout << oclHandles.error_str << "\tcl_status:" << oclHandles.cl_status <<std::endl;
       throw(oclHandles.error_str);
+    }
 #endif
   }
 }
@@ -419,7 +446,7 @@ void clLoadProgram(const char* filename, std::string kernel_name) {
       	throw(errorMsg);
 	}
 	oclHandles.kernel.push_back(kernel);
-
+  std::cout << "---Program loaded!" << std::endl;
 	//Add code here print allocation info
 }
 

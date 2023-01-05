@@ -16,9 +16,9 @@ struct oclHandleStruct {
   std::vector<cl_kernel> kernel;
 };
 
-cl_mem clMallocRO(int size, void *h_mem_ptr) throw(std::string);
-cl_mem clMallocWO(int size) throw(std::string);
-cl_mem clMallocRW(int size, void *h_mem_ptr) throw(std::string);
+cl_mem clMallocRO(int size, bool init = false, void *h_mem_ptr = NULL) throw(std::string);
+cl_mem clMallocWO(int size, bool init = false, void *h_mem_ptr = NULL) throw(std::string);
+cl_mem clMallocRW(int size, bool init = false, void *h_mem_ptr = NULL) throw(std::string);
 void clFree(cl_mem ob) throw(std::string);
 void clReallocRO(cl_mem ob, int size, void *h_mem_ptr) throw(std::string);
 void clReallocWO(cl_mem ob, int size) throw(std::string);

@@ -11,31 +11,37 @@ int size = 32;
 int argv_block_size = MAX_THREADS_PER_BLOCK;
 
 int main(int argc, char *argv[]) {
-    parse_args(argc, argv);
+  parse_args(argc, argv);
 
 	size_t nbytes = size * size * sizeof(float);
-    cl_mem a_d = NULL, b_d = NULL, c_d = NULL;
+  cl_mem a_d = NULL, b_d = NULL, c_d = NULL;
 	float *a_h = NULL, *b_h = NULL, *c_h = NULL; 
 	int width = size;
 
-    std::cout << "Create OpenCL context..." << std::endl; 
-    clInit();
-    a_d = clMallocRO(nbytes, NULL);
-    b_d = clMallocRO(nbytes, NULL);
-    c_d = clMallocWO(nbytes);
-	a_h = (float *) malloc(nbytes);
+  std::cout << "Create OpenCL context..." << std::endl;
+  clInit();
+  std::cout << "OpenCL context created" << std::endl;
+  a_h = (float *) malloc(nbytes);
 	b_h = (float *) malloc(nbytes);
 	c_h = (float *) malloc(nbytes);
+  a_d = clMallocRO(nbytes, a_h);
+  b_d = clMallocRO(nbytes, b_h);
+  c_d = clMallocRW(nbytes, c_h);
 	for (int i = 0; i < size; i++) {
 		a_h[i] = random<float>(-1.0f, 1.0f);
 		b_h[i] = random<float>(-1.0f, 1.0f);
-		c_h[i] = 0.0f;
+		c_h[i] = 0.2f;
   }
   clLoadProgram("./bin/kernels/sgemm.pocl","sgemm");
+  std::cout << "Program loaded" << std::endl;
 	clSetArgs(0, 0, (void *) &a_d, sizeof(cl_mem));
+  std::cout << "A param set" << std::endl; 
 	clSetArgs(0, 1, (void *) &b_d, sizeof(cl_mem));
+  std::cout << "B param set" << std::endl; 
 	clSetArgs(0, 2, (void *) &c_d, sizeof(cl_mem));
-	clSetArgs(0, 3, (void *) &width, sizeof(int));
+  std::cout << "C param set" << std::endl; 
+	clSetArgs(0, 3, (void *) &width, sizeof(width));
+  std::cout << "N param set" << std::endl; 
 	clMemcpyH2D(a_d, nbytes, (void *) a_h);
 	clMemcpyH2D(b_d, nbytes, (void *) b_h);
   size_t g_work_size[2] = {size, size};
