@@ -17,16 +17,16 @@ graph_conv_layer<Aggregator>::graph_conv_layer(int id, int nv, int din, int dout
     clInitConstMem<float>(x * y, 0.0, d_in_temp);
     clInitConstMem<float>(x * z, 0.0, d_out_temp);
     if (y <= z){
-        _clMallocRW(x * y, d_in_temp1);
+        d_in_temp1 = clMallocRW(x * y);
         clInitConstMem<float>(x * y, 0.0, d_in_temp1);
     }
     if (level_ > 0) {
-        _clMallocRW(x * y, feat_in);
+        feat_in = clMallocRW(x * y);
         clInitConstMem<float>(x * y, 0.0, feat_in);
     }
 
     if (is_bias) {
-    _clMallocRW(z, d_bias);
+    d_bias = clMallocRW(z);
     clInitConstMem<float>(z, 0.0, d_bias);
     }
 }
@@ -36,16 +36,16 @@ void graph_conv_layer<Aggregator>::update_dim_size(size_t x) {
     if (x > num_samples) {
         auto y = dim_in;
         auto z = dim_out;
-        _clReallocRW(x * y, d_in_temp);
-        _clReallocRW(x * z, d_out_temp);
+        d_in_temp = clReallocRW(d_in_temp, x * y);
+        d_out_temp = clReallocRW(d_out_temp, x * z);
         clInitConstMem<float>(x * y, 0.0, d_in_temp);
         clInitConstMem<float>(x * z, 0.0, d_out_temp);
         if (y <= z){
-            _clReallocRW(x * y, d_in_temp1);
+            d_in_temp1 = clReallocRW(d_in_temp1, x * y);
             clInitConstMem<float>(x * y, 0.0, d_in_temp1);
         }
         if (level_ > 0) {
-            _clReallocRW(x * y, feat_in);
+            feat_in = clReallocRW(feat_in, x * y);
             clInitConstMem<float>(x * y, 0.0, feat_in);
         }
     }

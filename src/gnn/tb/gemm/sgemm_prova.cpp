@@ -20,18 +20,39 @@ int main(int argc, char *argv[]) {
 
   std::cout << "Create OpenCL context..." << std::endl;
   clInit();
+  
+  //----------------------------------------------------------
+  std::cout << "Testing extra functionalities" << std::endl;
+
+  float *a, *b, *c; 
+  b = (float*) malloc(sizeof(float));
+  c = (float*) malloc(sizeof(float));
+  b[0] = 1.0f;
+  c[0] = 0.0f;
+  //a = (float*) clMallocRW(sizeof(float),true,(void*) b);
+  a = (float*) clMallocRW(sizeof(float));
+  std::cout << "Malloc OKK" << std::endl;
+  clMemcpyH2D(cl_mem(a), sizeof(float), (void*) b);
+  //clMemcpyD2H(cl_mem(a), sizeof(float), (void*) c);
+  std::cout << "B:" << b[0] <<std::endl;
+  std::cout << "C:" << c[0] <<std::endl;
+  clFree(cl_mem(a));
+  free(b);
+  free(c);
+  //----------------------------------------------------------
+
   std::cout << "OpenCL context created" << std::endl;
   a_h = (float *) malloc(nbytes);
 	b_h = (float *) malloc(nbytes);
 	c_h = (float *) malloc(nbytes);
-  a_d = clMallocRO(nbytes, a_h);
-  b_d = clMallocRO(nbytes, b_h);
-  c_d = clMallocRW(nbytes, c_h);
 	for (int i = 0; i < size; i++) {
 		a_h[i] = random<float>(-1.0f, 1.0f);
 		b_h[i] = random<float>(-1.0f, 1.0f);
 		c_h[i] = 0.2f;
   }
+  a_d = clMallocRO(nbytes, true, a_h);
+  b_d = clMallocRO(nbytes, true, b_h);
+  c_d = clMallocRW(nbytes, true, c_h);
   clLoadProgram("./bin/kernels/sgemm.pocl","sgemm");
   std::cout << "Program loaded" << std::endl;
 	clSetArgs(0, 0, (void *) &a_d, sizeof(cl_mem));
@@ -68,7 +89,7 @@ int main(int argc, char *argv[]) {
   	} else {
     	printf("PASSED!\n");
   	}
-	
+
 	clRelease();
 	free(a_h);
 	free(b_h);
@@ -76,6 +97,7 @@ int main(int argc, char *argv[]) {
 	clFree(a_d);
 	clFree(b_d);
 	clFree(c_d);
+
 	return 0;
 }
 

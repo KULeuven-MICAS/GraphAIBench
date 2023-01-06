@@ -16,13 +16,14 @@ struct oclHandleStruct {
   std::vector<cl_kernel> kernel;
 };
 
+//TODO init param is useless, should check on validity of h_mem_ptr!
 cl_mem clMallocRO(int size, bool init = false, void *h_mem_ptr = NULL) throw(std::string);
 cl_mem clMallocWO(int size, bool init = false, void *h_mem_ptr = NULL) throw(std::string);
 cl_mem clMallocRW(int size, bool init = false, void *h_mem_ptr = NULL) throw(std::string);
 void clFree(cl_mem ob) throw(std::string);
-void clReallocRO(cl_mem ob, int size, void *h_mem_ptr) throw(std::string);
-void clReallocWO(cl_mem ob, int size) throw(std::string);
-void clReallocRW(cl_mem ob, int size, void *h_mem_ptr) throw(std::string);
+cl_mem clReallocRO(cl_mem ob, int size, bool init = false, void *h_mem_ptr = NULL) throw(std::string);
+cl_mem clReallocWO(cl_mem ob, int size, bool init = false, void *h_mem_ptr = NULL) throw(std::string);
+cl_mem clReallocRW(cl_mem ob, int size, bool init = false, void *h_mem_ptr = NULL) throw(std::string);
 void clMemcpyH2D(cl_mem d_mem, int size, const void *h_mem_ptr) throw(std::string);
 void clMemcpyD2H(cl_mem d_mem, int size, void *h_mem) throw(std::string);
 template <typename T>

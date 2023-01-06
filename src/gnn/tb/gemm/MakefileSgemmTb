@@ -13,8 +13,8 @@ POCL_CC_PATH ?= /opt/pocl/compiler
 POCL_RT_PATH ?= /opt/pocl/runtime
 
 #modified below to avoid shell override
-VORTEX_DRV_PATH ?= $(realpath ../../../../../../driver)# used only for run recipe
-VORTEX_RT_PATH ?= $(realpath ../../../../../../runtime)# used only for kernel compilation
+VORTEX_DRV_PATH ?= $(realpath ../../../../../../../driver)# used only for run recipe
+VORTEX_RT_PATH ?= $(realpath ../../../../../../../runtime)# used only for kernel compilation
 
 POCL_KERNEL_LLCFLAGS += "-O3 -march=riscv32 -target-abi=ilp32f -mcpu=generic-rv32 -mattr=+m,+f -mattr=+vortex -float-abi=hard -code-model=small"
 POCL_KERNEL_CFLAGS   += "-v -O3 -Wstack-usage=1024 --sysroot=$(SYSROOT) --gcc-toolchain=$(RISCV_TOOLCHAIN_PATH) -march=rv32imf -mabi=ilp32f -Xclang -target-feature -Xclang +vortex -I$(VORTEX_RT_PATH)/include -fno-rtti -fno-exceptions -ffreestanding -nostartfiles -fdata-sections -ffunction-sections"
@@ -25,11 +25,11 @@ VORTEX_CXXFLAGS += -I$(POCL_RT_PATH)/include
 
 CXX=g++
 NVCC=nvcc
-IDIR=../../../include/gnn
-INCLUDES=-I../../../include/utils -I../../../include/gnn
+IDIR=../../../../include/gnn
+INCLUDES=-I../../../../include/utils -I../../../../include/gnn
 CFLAGS=$(INCLUDES) -fopenmp -pthread -Wall --std=c++11 -lboost_thread -lboost_system -DERRMSG #-fsanitize=address 
 
-VPATH += ../cl_utils
+VPATH += ../../cl_utils/
 
 CFLAGS += $(VORTEX_LDFLAGS)
 CFLAGS += $(VORTEX_CXXFLAGS)

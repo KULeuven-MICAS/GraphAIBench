@@ -1,5 +1,5 @@
 
-/tmp/pocl_vortex_kernel-25-45-82-da-05.elf:	file format ELF32-riscv
+/tmp/pocl_vortex_kernel-d0-72-a3-a1-6b.elf:	file format ELF32-riscv
 
 
 Disassembly of section .init:
@@ -1698,12 +1698,13 @@ Disassembly of section .strtab:
       3e: 5f 6b 65 72                  	<unknown>
       42: 6e 65                        	<unknown>
       44: 6c 2d                        	<unknown>
-      46: 35 36                        	<unknown>
-      48: 2d 38                        	<unknown>
-      4a: 64 2d                        	<unknown>
-      4c: 33 30 2d 63                  	<unknown>
+      46: 66 36                        	<unknown>
+      48: 2d 33                        	<unknown>
+      4a: 65 2d                        	<unknown>
+      4c: 39 62                        	<unknown>
+      4e: 2d 30                        	<unknown>
       50: 61 2d                        	<unknown>
-      52: 31 35                        	<unknown>
+      52: 30 33                        	<unknown>
       54: 2e 63                        	<unknown>
       56: 00 70                        	<unknown>
       58: 61 72                        	<unknown>

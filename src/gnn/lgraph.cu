@@ -89,7 +89,7 @@ void LearningGraph::copy_to_gpu() {
   //if (!vertex_data_.empty()) copy_float_device(num_vertices_, &vertex_data_[0], d_vertex_data_);
   //if (!edge_data_.empty()) copy_float_device(num_edges_, &edge_data_[0], d_edge_data_);
   //print_test();
-} 
+}
 
 void LearningGraph::compute_vertex_data() {
   auto n = num_vertices_;

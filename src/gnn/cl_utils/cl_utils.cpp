@@ -23,8 +23,11 @@ cl_mem clMallocRW(int size, bool init, void *h_mem_ptr) throw(std::string) {
                          &oclHandles.cl_status);  //*errcode_ret
 
  #ifdef ERRMSG
-  if (oclHandles.cl_status != CL_SUCCESS)
-    throw(std::string("exception in _clMallocRW"));
+  if (oclHandles.cl_status != CL_SUCCESS){
+    std::cout << "cl_status: " << oclHandles.cl_status << std::endl;
+    std::cout << "exception in clMallocRW" << std::endl;
+    throw(std::string("exception in clMallocRW"));
+  }
 #endif
   return d_mem;
 }
@@ -86,29 +89,25 @@ void clFree(cl_mem ob) throw(std::string) {
 #endif
 }
 
-void clReallocRO(cl_mem ob, int size, void *h_mem_ptr) throw(std::string) {
-    clFree(ob);
-#ifdef ERRMSG
-  	if (oclHandles.cl_status != CL_SUCCESS)
-    	throw(std::string("excpetion in _clReallocateRO()"));
-#endif
-  	ob = clMallocRO(size, h_mem_ptr);
+cl_mem clReallocRO(cl_mem ob, int size, bool init, void *h_mem_ptr) throw(std::string) {
+  clFree(ob);
+  cl_mem new_ob;
+  new_ob = clMallocRO(size, init, h_mem_ptr);
+  return new_ob;
 }
-void clReallocWO(cl_mem ob, int size) throw(std::string) {
-    clFree(ob);
-#ifdef ERRMSG
-  	if (oclHandles.cl_status != CL_SUCCESS)
-    	throw(std::string("excpetion in _clReallocateWO()"));
-#endif
-  	ob = clMallocWO(size);
+
+cl_mem clReallocWO(cl_mem ob, int size, bool init, void *h_mem_ptr) throw(std::string) {
+  clFree(ob);
+  cl_mem new_ob;
+  new_ob = clMallocWO(size, init, h_mem_ptr);
+  return new_ob;
 }
-void clReallocRW(cl_mem ob, int size, void *h_mem_ptr) throw(std::string) {
-    clFree(ob);
-#ifdef ERRMSG
-  	if (oclHandles.cl_status != CL_SUCCESS)
-    	throw(std::string("excpetion in _clReallocateRW()"));
-#endif
-  	ob = clMallocRW(size, h_mem_ptr);
+
+cl_mem clReallocRW(cl_mem ob, int size, bool init, void *h_mem_ptr) throw(std::string) {
+  clFree(ob);
+  cl_mem new_ob;
+  new_ob = clMallocRW(size, init, h_mem_ptr);
+  return new_ob;
 }
 
 //--transfer data from host to device
@@ -159,15 +158,15 @@ void clMemcpyD2H(cl_mem d_mem, int size, void *h_mem) throw(std::string) {
 
 template <typename T>
 void clInitConstMem(int size, T initValue, cl_mem d_mem_ptr) throw(std::string) {
-    oclHandles.cl_status = clEnqueueWriteBuffer(oclHandles.queue,
-                                                d_mem_ptr,
-                                                &initValue,
-                                                sizeof(T),
-                                                0, 
-                                                size,
-                                                0,
-                                                NULL, 
-                                                &(oclHandles.event));
+    oclHandles.cl_status = clEnqueueFillBuffer( oclHandles.queue,     // command_queue
+                                                d_mem_ptr,            // buffer
+                                                (void*) &initValue,   // pattern
+                                                sizeof(T),            // pattern_size
+                                                0,                    // offset
+                                                size,                 // size
+                                                0,                    // num_events_in_wait_list
+                                                NULL,                 // *event_wait_list
+                                                &(oclHandles.event)); // *event
     cl_int cl_status = clWaitForEvents(1, &(oclHandles.event));
 #ifdef ERRMSG
     if (oclHandles.cl_status != CL_SUCCESS || cl_status != CL_SUCCESS)
