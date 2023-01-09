@@ -16,6 +16,12 @@ struct oclHandleStruct {
   std::vector<cl_kernel> kernel;
 };
 
+struct oclKernelParamStruct oclKernelParam;
+struct oclKernelParamStruct {
+  size_t* global_work_size;
+  size_t* local_work_size;
+};
+
 //TODO init param is useless, should check on validity of h_mem_ptr!
 cl_mem clMallocRO(int size, bool init = false, void *h_mem_ptr = NULL) throw(std::string);
 cl_mem clMallocWO(int size, bool init = false, void *h_mem_ptr = NULL) throw(std::string);
