@@ -16,7 +16,6 @@ struct oclHandleStruct {
   std::vector<cl_kernel> kernel;
 };
 
-struct oclKernelParamStruct oclKernelParam;
 struct oclKernelParamStruct {
   size_t* global_work_size;
   size_t* local_work_size;

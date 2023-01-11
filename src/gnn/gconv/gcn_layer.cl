@@ -13,6 +13,14 @@ void GCN_layer::forward(float* feat_out) {
   //  dropout_gpu(x*y, feat_scale, feat_dropout_rate, in_data, dropout_mask, d_in_temp);
   //  in_data = d_in_temp;
   //}
+  struct oclKernelParamStruct work_groups;
+  work.groups.global_work_size = (size_t*) malloc(2 * sizeof(size_t));
+  work_groups.global_work_size[0] = x;
+  work_groups.global_work_size[1] = y;
+  work_groups.local_work_size = (size_t*) malloc(2 * sizeof(size_t));
+  work_groups.local_work_size[0] = (x<16) ? 16 : x ;
+  work_groups.local_work_size[1] = (y<16) ? 16 : y ;
+
   if (y > z) {
     clMatmul(x, z, y, in_data, d_W_neigh, d_out_temp); // x*y; y*z; x*z
     aggr.aggregate(z, *graph, d_out_temp, feat_out); // x*x; x*z; x*z
