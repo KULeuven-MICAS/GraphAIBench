@@ -58,7 +58,7 @@ prova: main.cpp $(OBJ)
 	$(CXX) -o $(BIN_DIR)/$@ $^ $(CFLAGS)
 
 run: prova aggr.pocl 
-	LD_LIBRARY_PATH=$(POCL_RT_PATH)/lib:$(VORTEX_DRV_PATH)/simx:$(LD_LIBRARY_PATH) $(BIN_DIR)/prova -n32 -b16
+	LD_LIBRARY_PATH=$(POCL_RT_PATH)/lib:$(VORTEX_DRV_PATH)/simx:$(LD_LIBRARY_PATH) $(BIN_DIR)/prova
 
 .PHONY: clean
 clean:
