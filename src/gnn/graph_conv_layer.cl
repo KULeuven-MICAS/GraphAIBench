@@ -10,8 +10,13 @@ graph_conv_layer<Aggregator>::graph_conv_layer(int id, int nv, int din, int dout
     auto x = num_samples;
     auto y = dim_in;
     auto z = dim_out;
+
+    d_W_neigh = (float*)clMallocRW(y * z);
     auto init_range = sqrt(6.0 / (y + z));
-    
+    clInitRangeUniformMem(y + z, -init_range, init_range, d_W_neigh);
+
+    rng_uniform_gpu(y * z, -init_range, init_range, d_W_neigh);
+
     d_in_temp = clMallocRW(x * y);
     d_out_temp = clMallocRW(x * z);
     clInitConstMem<float>(x * y, 0.0, d_in_temp);

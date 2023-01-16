@@ -14,7 +14,7 @@ void GCN_layer::forward(float* feat_out) {
   //  in_data = d_in_temp;
   //}
   struct oclKernelParamStruct work_groups;
-  work.groups.global_work_size = (size_t*) malloc(2 * sizeof(size_t));
+  work_groups.global_work_size = (size_t*) malloc(2 * sizeof(size_t));
   work_groups.global_work_size[0] = x;
   work_groups.global_work_size[1] = y;
   work_groups.local_work_size = (size_t*) malloc(2 * sizeof(size_t));
