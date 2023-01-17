@@ -7,6 +7,10 @@ static bool almost_equal(float a, float b, int ulp = 21);
 static void aggr(const int vlen, const int vnum, const float *A, const int *A_idx_ptr, const int *A_idx, const float *B, float *C);
 float * gen_spm(const int vlen, const int vnum, float *A, int *A_idx_ptr, int *A_idx);
 
+///////////////////////////OUTDATED CODE///////////////////////////
+//removed vnum as kernel argument!!!!!!!!
+//////////////////////////////////////////////////////////////////
+
 int main (int argc, char* argv[]){
 
     //CPU data 
