@@ -13,4 +13,7 @@ __kernel void aggr (const int vlen,
     for (int e = A_idx_ptr[i]; e < A_idx_ptr[i+1]; e++) {
         C[i * vlen + j] += A_nnz[A_idx[e]] * B[i * vlen + j];
     }
+    //if (i == 15) {
+    //    printf("C[%d] = %f", i*vlen+j, C[i*vlen+j]);
+    //}
 }

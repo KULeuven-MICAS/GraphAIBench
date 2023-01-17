@@ -5,7 +5,7 @@
 #endif
 
 
-void clSpmm(size_t x, size_t y, float* A_nonzeros, int* A_idx_ptr, int* A_nnz_idx, const float* B, float* C){
+void clAvgAggr(size_t vnum, size_t vlen, float* A_nonzeros, int* A_idx_ptr, int* A_nnz_idx, const float* B, float* C){
     std::cout << "Not implemented yet" << std::endl;
     throw("Too bad!");
 }

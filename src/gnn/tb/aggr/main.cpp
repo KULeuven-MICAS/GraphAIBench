@@ -17,7 +17,7 @@ int main (int argc, char* argv[]){
     float *C = (float*)malloc(vlen*vnum*sizeof(float));
     float *H = (float*)malloc(vlen*vnum*sizeof(float));
     int *A_idx_ptr = (int*)malloc((vnum+1)*sizeof(int));
-    int *A_idx = (int*)malloc((vnum)*(vlen)*sizeof(int));
+    int *A_idx = (int*)malloc((vlen)*(vlen)*sizeof(int));
 
     //GPU data
     cl_mem A_d, B_d, C_d, A_idx_ptr_d, A_idx_d;
@@ -26,20 +26,33 @@ int main (int argc, char* argv[]){
     for (int i = 0; i < vlen*vnum; i++){
         B[i] = random<float>(-1.0f, 1.0f);
         C[i] = 0.0f;
+        H[i] = 0.0f;
     }
     A = gen_spm(vlen, vnum, A, A_idx_ptr, A_idx);
+
+
+    //DEBUG prints
     std::cout << "Non zero elements:" << A_idx_ptr[vnum] << std::endl;
     for (int i = 0; i < vnum; i++)
         std::cout << "A_idx_ptr[" << i << "]:\t" << A_idx_ptr[i] << "\tA_idx[" << i << "]:\t" << A_idx[i] << std::endl;
-    for (size_t i = 0; i < A_idx_ptr[vnum]; ++i)
+    //for (size_t i = 0; i < A_idx_ptr[vnum]; ++i)
+    //    std::cout << "A[" << i << "]:\t" << A[i] << std::endl;
+    int exact = 15;
+    int Bexact = exact*vlen + 0;
+    for (size_t i = A_idx_ptr[exact]; i < A_idx_ptr[exact+1]; ++i)
         std::cout << "A[" << i << "]:\t" << A[i] << std::endl;
+    std::cout << "B:" << B[Bexact] << std::endl;
+    float check;
+    for (size_t i = A_idx_ptr[exact]; i < A_idx_ptr[exact+1]; ++i)
+        check += A[i] * B[Bexact];
+    std::cout << "check:" << check << std::endl;
 
     //Exec OpenCL
     clInit();
     A_d = clMallocRO(A_idx_ptr[vnum]*sizeof(float), true, A);
     B_d = clMallocRO(vlen*vnum*sizeof(float), true, B);
     C_d = clMallocWO(vlen*vnum*sizeof(float), true, C);
-    A_idx_ptr_d = clMallocRO((vnum)*sizeof(int), true, A_idx_ptr);
+    A_idx_ptr_d = clMallocRO((vnum+1)*sizeof(int), true, A_idx_ptr);
     A_idx_d = clMallocRO(A_idx_ptr[vnum]*sizeof(int), true, A_idx);
     clLoadProgram("./bin/kernels/aggr.pocl","aggr");
     clSetArgs(0, 0, (void *) &vlen, sizeof(int));
@@ -104,7 +117,7 @@ static void aggr(const int vlen, const int vnum, const float *A, const int *A_id
     for (int i = 0; i < vnum; i++){
         for (int j = A_idx_ptr[i]; j < A_idx_ptr[i+1]; j++){
             for (int k = 0; k < vlen; k++)
-                neighbor[k] = B[j*vlen+k] * A[A_idx[j]];
+                neighbor[k] = B[i*vlen+k] * A[A_idx[j]];
             for (int k = 0; k < vlen; k++)
                 C[i*vlen+k] += neighbor[k];
         }
