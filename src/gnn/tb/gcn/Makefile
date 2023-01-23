@@ -26,8 +26,8 @@ VORTEX_CXXFLAGS += -I$(POCL_RT_PATH)/include
 CXX=g++
 NVCC=nvcc
 IDIR=../../../../include/gnn
-INCLUDES=-I../../../../include/utils -I../../../../include/gnn
-CFLAGS=$(INCLUDES) -fopenmp -pthread -Wall --std=c++11 -lboost_thread -lboost_system -DERRMSG #-fsanitize=address 
+INCLUDES=-I../../../../include/utils -I../../../../include/gnn -I../../../../include
+CFLAGS=$(INCLUDES) -fopenmp -pthread -Wall --std=c++11 -lboost_thread -lboost_system -DERRMSG -DDEBUGG #-fsanitize=address 
 
 VPATH += ../../cl_utils/
 VPATH += ../../
@@ -36,7 +36,7 @@ CFLAGS += $(VORTEX_LDFLAGS)
 CFLAGS += $(VORTEX_CXXFLAGS)
 
 ODIR=./obj
-OBJS = cl_utils.o reader.o lgraph.cl.o cl_math_functions.o
+OBJS = cl_utils.o reader.o lgraph.o cl_math_functions.o
 
 OBJ = $(patsubst %,$(ODIR)/%,$(OBJS))
 
@@ -45,17 +45,19 @@ KBIN_DIR=./bin/kernels
 
 KSRC_DIR=../../cl_cernels
 
-all: prova aggr.pocl
+KERNELS = aggr.pocl sgemm.pocl
+
+all: prova $(KERNELS)
 
 $(ODIR)/%.o: %.cpp
 	@mkdir -p $(@D)
 	$(CXX) -c -o $@ $< $(CFLAGS)
 
-$(ODIR)/%.o: %.cl
+$(ODIR)/%.o: %.cc
 	@mkdir -p $(@D)
 	$(CXX) -c -o $@ $< $(CFLAGS)
 
-aggr.pocl: ../cl_kernels/aggr.cl
+%.pocl: ../cl_kernels/%.cl
 	@mkdir -p $(KBIN_DIR)
 	LLVM_PREFIX=$(LLVM_PREFIX) POCL_DEBUG=all LD_LIBRARY_PATH=$(LLVM_PREFIX)/lib:$(POCL_CC_PATH)/lib $(POCL_CC_PATH)/bin/poclcc -LLCFLAGS $(POCL_KERNEL_LLCFLAGS) -CFLAGS $(POCL_KERNEL_CFLAGS) -LDFLAGS $(POCL_KERNEL_LDFLAGS) -o $(KBIN_DIR)/$@ $<
 

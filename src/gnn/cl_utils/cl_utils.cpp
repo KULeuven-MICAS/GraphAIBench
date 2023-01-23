@@ -452,8 +452,32 @@ void clLoadProgram(const char* filename, std::string kernel_name) {
 //--enqueue kernel execution
 void clInvokeKernel(int kernel_id, cl_uint work_dim, size_t* g_work_size, size_t* l_work_size) throw(std::string) {
   //check on local and global work size is missing here... an improvement could be to add it
-  //size_t local_work_size[work_dim] = l_work_size;
-  //size_t global_work_size[work_dim] = g_work_size;
+  /*std::cout << "Global work size: " << work_groups.global_work_size[0] << "x" << work_groups.global_work_size[1] << std::endl;
+  size_t virtual_work_group_size;
+  for (int i = 0; i < work_dim; i++) {
+    virtual_work_group_size *= g_work_size[i];
+  }
+  size_t TILE_LIMIT = (CL_DEVICE_MAX_WORK_GROUP_SIZE > CL_KERNEL_WORK_GROUP_SIZE) ? CL_KERNEL_WORK_GROUP_SIZE : CL_DEVICE_MAX_WORK_GROUP_SIZE; 
+  if virtual_work_group_size > TILE_LIMIT {
+    std::cout << "Virtual work group size is greater than the maximum allowed by the device." << std::endl;
+    std::cout << "--->Virtual work group size: " << virtual_work_group_size << std::endl;
+    std::cout << "------>CL_DEVICE_MAX_WORK_GROUP_SIZE:" << CL_DEVICE_MAX_WORK_GROUP_SIZE << std::endl;
+    std::cout << "------>CL_KERNEL_WORK_GROUP_SIZE:" << CL_KERNEL_WORK_GROUP_SIZE << std::endl;
+    std::cout << "------>CL_DEVICE_MAX_WORK_ITEM_SIZES:" << CL_DEVICE_MAX_WORK_ITEM_SIZES << std::endl;
+    std::cout << "Partitioning the workload ..." << std::endl;
+    case work_dim:
+      case 1:
+        g_work_size[0] = TILE_LIMIT;
+        iterations = ceil(virtual_work_group_size / TILE_LIMIT);
+        break;
+      case 2:
+        if (g_work_size[0] > TILE_LIMIT)
+        break;
+      default:
+        std::cout << "Work dimension not supported." << std::endl;
+        throw("Work dimension not supported.");
+        break
+  }*/
 	oclHandles.cl_status = clEnqueueNDRangeKernel( oclHandles.queue, oclHandles.kernel[kernel_id], work_dim, 0, g_work_size, l_work_size, 0, 0, NULL);
 #ifdef ERRMSG
   oclHandles.error_str = "excpetion in _clInvokeKernel() -> ";
@@ -505,6 +529,13 @@ void clInvokeKernel(int kernel_id, cl_uint work_dim, size_t* g_work_size, size_t
     break;
   }
   if (oclHandles.cl_status != CL_SUCCESS)
+    std::cout << oclHandles.error_str << "\tcl_status:" << oclHandles.cl_status <<std::endl;
     throw(oclHandles.error_str);
 #endif
+}
+
+void make_global_work_group_even(int work_dim, size_t *&g_work_group, size_t *&l_work_group){
+  for (int i = 0; i < work_dim; i++) {
+    if (g_work_group[i] % l_work_group[i] != 0) {
+      g_work_group[i] = g_work_group[i] + (l_work_group[i] - (g_work_group[i] % l_work_group[i]));
 }
