@@ -359,9 +359,10 @@ void clSetArgs(int kernel_id, int arg_idx, void *d_mem, int size /*= 0*/) throw(
       oclHandles.error_str += "Unknown reason";
       break;
     }
-    if (oclHandles.cl_status != CL_SUCCESS)
+    if (oclHandles.cl_status != CL_SUCCESS){
       std::cout << oclHandles.error_str << std::endl;
       throw(oclHandles.error_str);
+    }
 #endif
   } else {
     oclHandles.cl_status = clSetKernelArg(oclHandles.kernel[kernel_id], arg_idx, size, d_mem);
@@ -398,6 +399,7 @@ void clSetArgs(int kernel_id, int arg_idx, void *d_mem, int size /*= 0*/) throw(
     }
     if (oclHandles.cl_status != CL_SUCCESS){
       std::cout << oclHandles.error_str << "\tcl_status:" << oclHandles.cl_status <<std::endl;
+      std::cout << "kernel_id:" << kernel_id << "\targ_idx:" << arg_idx << "\tsize:" << size << std::endl;
       throw(oclHandles.error_str);
     }
 #endif
@@ -413,27 +415,30 @@ void clLoadProgram(const char* filename, std::string kernel_name) {
 	if (read_kernel_file(filename, &kernel_bin, &kernel_size) != 0) throw(std::string("exception in clLoadProgram -> read_kernel_file"));
 
 	oclHandles.program = clCreateProgramWithBinary(oclHandles.context, 1, &oclHandles.devices[DEVICE_ID_INUSED], &kernel_size, (const uint8_t**)&kernel_bin, &binary_status, &resultCL);
-	if ((resultCL != CL_SUCCESS) || (oclHandles.program == NULL)) throw(std::string("InitCL()::Error: Loading Binary into cl_program. (clCreateProgramWithBinary)"));
+	if ((resultCL != CL_SUCCESS) || (oclHandles.program == NULL)){
+    std::cerr << "InitCL()::Error: Loading Binary into cl_program. (clCreateProgramWithBinary)" << resultCL << std::endl;
+    throw(std::string("InitCL()::Error: Loading Binary into cl_program. (clCreateProgramWithBinary)"));
+  }
 	free(kernel_bin);
 
 	resultCL = clBuildProgram(oclHandles.program, deviceListSize, oclHandles.devices, NULL, NULL, NULL);
 	if ((resultCL != CL_SUCCESS) || (oclHandles.program == NULL)) {
 		std::cerr << "InitCL()::Error: In clBuildProgram" << std::endl;
-
-    	size_t length;
-    	resultCL = clGetProgramBuildInfo(oclHandles.program, oclHandles.devices[DEVICE_ID_INUSED],
+    std::cout << "----------------------------------------" << std::endl;
+    size_t length;
+    resultCL = clGetProgramBuildInfo(oclHandles.program, oclHandles.devices[DEVICE_ID_INUSED],
     	                                CL_PROGRAM_BUILD_LOG, 0, NULL, &length);
-    	if (resultCL != CL_SUCCESS) throw(std::string("InitCL()::Error: Getting Program build info(clGetProgramBuildInfo)"));
+    if (resultCL != CL_SUCCESS) throw(std::string("InitCL()::Error: Getting Program build info(clGetProgramBuildInfo)"));
 
-    	char *buffer = (char *)malloc(length);
-    	resultCL = clGetProgramBuildInfo(oclHandles.program, oclHandles.devices[DEVICE_ID_INUSED],
+    char *buffer = (char *)malloc(length);
+    resultCL = clGetProgramBuildInfo(oclHandles.program, oclHandles.devices[DEVICE_ID_INUSED],
     	    							CL_PROGRAM_BUILD_LOG, length, buffer, NULL);
-    	if (resultCL != CL_SUCCESS) throw(std::string("InitCL()::Error: Getting Program build info(clGetProgramBuildInfo)"));
+    if (resultCL != CL_SUCCESS) throw(std::string("InitCL()::Error: Getting Program build info(clGetProgramBuildInfo)"));
 
-    	std::cerr << buffer << std::endl;
-    	free(buffer);
+    std::cerr << buffer << std::endl;
+    free(buffer);
 
-    	throw(std::string("InitCL()::Error: Building Program (clBuildProgram)"));
+    throw(std::string("InitCL()::Error: Building Program (clBuildProgram)"));
   	}
 
 	//Add code here print info about intermediate representation
@@ -447,37 +452,11 @@ void clLoadProgram(const char* filename, std::string kernel_name) {
 	oclHandles.kernel.push_back(kernel);
   std::cout << "---Program loaded!" << std::endl;
 	//Add code here print allocation info
+  return kernel;
 }
 
 //--enqueue kernel execution
 void clInvokeKernel(int kernel_id, cl_uint work_dim, size_t* g_work_size, size_t* l_work_size) throw(std::string) {
-  //check on local and global work size is missing here... an improvement could be to add it
-  /*std::cout << "Global work size: " << work_groups.global_work_size[0] << "x" << work_groups.global_work_size[1] << std::endl;
-  size_t virtual_work_group_size;
-  for (int i = 0; i < work_dim; i++) {
-    virtual_work_group_size *= g_work_size[i];
-  }
-  size_t TILE_LIMIT = (CL_DEVICE_MAX_WORK_GROUP_SIZE > CL_KERNEL_WORK_GROUP_SIZE) ? CL_KERNEL_WORK_GROUP_SIZE : CL_DEVICE_MAX_WORK_GROUP_SIZE; 
-  if virtual_work_group_size > TILE_LIMIT {
-    std::cout << "Virtual work group size is greater than the maximum allowed by the device." << std::endl;
-    std::cout << "--->Virtual work group size: " << virtual_work_group_size << std::endl;
-    std::cout << "------>CL_DEVICE_MAX_WORK_GROUP_SIZE:" << CL_DEVICE_MAX_WORK_GROUP_SIZE << std::endl;
-    std::cout << "------>CL_KERNEL_WORK_GROUP_SIZE:" << CL_KERNEL_WORK_GROUP_SIZE << std::endl;
-    std::cout << "------>CL_DEVICE_MAX_WORK_ITEM_SIZES:" << CL_DEVICE_MAX_WORK_ITEM_SIZES << std::endl;
-    std::cout << "Partitioning the workload ..." << std::endl;
-    case work_dim:
-      case 1:
-        g_work_size[0] = TILE_LIMIT;
-        iterations = ceil(virtual_work_group_size / TILE_LIMIT);
-        break;
-      case 2:
-        if (g_work_size[0] > TILE_LIMIT)
-        break;
-      default:
-        std::cout << "Work dimension not supported." << std::endl;
-        throw("Work dimension not supported.");
-        break
-  }*/
 	oclHandles.cl_status = clEnqueueNDRangeKernel( oclHandles.queue, oclHandles.kernel[kernel_id], work_dim, 0, g_work_size, l_work_size, 0, 0, NULL);
 #ifdef ERRMSG
   oclHandles.error_str = "excpetion in _clInvokeKernel() -> ";
@@ -528,14 +507,15 @@ void clInvokeKernel(int kernel_id, cl_uint work_dim, size_t* g_work_size, size_t
     oclHandles.error_str += "Unkown reseason";
     break;
   }
-  if (oclHandles.cl_status != CL_SUCCESS)
+  if (oclHandles.cl_status != CL_SUCCESS){
     std::cout << oclHandles.error_str << "\tcl_status:" << oclHandles.cl_status <<std::endl;
     throw(oclHandles.error_str);
+  }
 #endif
 }
 
 void make_global_work_group_even(int work_dim, size_t *&g_work_group, size_t *&l_work_group){
-  for (int i = 0; i < work_dim; i++) {
-    if (g_work_group[i] % l_work_group[i] != 0) {
+  for (int i = 0; i < work_dim; i++) 
+    if (g_work_group[i] % l_work_group[i] != 0) 
       g_work_group[i] = g_work_group[i] + (l_work_group[i] - (g_work_group[i] % l_work_group[i]));
 }

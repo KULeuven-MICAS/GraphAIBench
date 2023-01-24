@@ -41,6 +41,6 @@ void clInitRangeUniformMem(int size, const float_t a, const float_t b, cl_mem d_
 void clInit();
 void clRelease();
 void clSetArgs(int kernel_id, int arg_idx, void *d_mem, int size = 0) throw(std::string);
-void clLoadProgram(const char* filename, std::string kernel_name);
+cl_kernel clLoadProgram(const char* filename, std::string kernel_name);
 void clInvokeKernel(int kernel_id, cl_uint work_dim, size_t* g_work_size, size_t* l_work_size) throw(std::string);
 void make_global_work_group_even(int work_dim, size_t *&g_work_group, size_t *&l_work_group);

@@ -26,6 +26,8 @@ int main (int argc, char * argv []) {
     reader->readGraphFromGRFile(h_full_graph);
     int num_samples = full_graph->size();
     
+    num_samples = 32;
+
     std::vector<label_t> dummy_labels(num_samples, 0);
     int num_cls = reader->read_labels(dummy_labels, 0); //fake labels read
     std::vector<label_t>().swap(dummy_labels); //free memory
@@ -33,7 +35,7 @@ int main (int argc, char * argv []) {
     full_graph->add_selfloop();
     
     int dim_init = reader->read_features(input_features);
-
+    dim_init = 32;
     //construct network here
     int dim_in[layers_size]      = {dim_init, dim_hid};
     int dim_out[layers_size]     = {dim_hid, num_cls};
@@ -69,6 +71,7 @@ int main (int argc, char * argv []) {
     full_graph->compute_edge_data();
     h_full_graph->compute_vertex_data();
     h_full_graph->compute_edge_data();
+
     full_graph->alloc_on_device();
     full_graph->copy_to_gpu();
 
@@ -98,18 +101,20 @@ int main (int argc, char * argv []) {
     d_feat_in[2] = (float*)clMallocRW(num_samples * num_cls * sizeof(float));
 
     //CPU computation
-    for (int i = 0; i < layers_size; i++) {
-        if (dim_in[i] > dim_out[i]) {
-            matmul(num_samples, dim_out[i], dim_in[i], feat_in[i], W_neigh[i], out_temp[i]); // x*y; y*z; x*z
-            aggr(h_full_graph->size(), dim_out[i], (float*) h_full_graph->edge_data_ptr(), (int*)h_full_graph->row_start_ptr(), (int*)h_full_graph->edge_dst_ptr(), out_temp[i], feat_in[i+1]); // x*x; x*z; x*z
-        } else {
-            aggr(h_full_graph->size(), dim_in[i], (float*) h_full_graph->edge_data_ptr(), (int*)h_full_graph->row_start_ptr(), (int*)h_full_graph->edge_dst_ptr(), feat_in[i], out_temp[i]); // x*x; x*z; x*z
-            matmul(num_samples, dim_out[i], dim_in[i], out_temp[i], W_neigh[i], feat_in[i+1]); // x*y; y*z; x*z
-        }
-    }
+    //for (int i = 0; i < layers_size; i++) {
+    //    if (dim_in[i] > dim_out[i]) {
+    //        matmul(num_samples, dim_out[i], dim_in[i], feat_in[i], W_neigh[i], out_temp[i]); // x*y; y*z; x*z
+    //        aggr(num_samples, dim_out[i], (float*) h_full_graph->edge_data_ptr(), (int*)h_full_graph->row_start_ptr(), (int*)h_full_graph->edge_dst_ptr(), out_temp[i], feat_in[i+1]); // x*x; x*z; x*z
+    //    } else {
+    //        aggr(num_samples, dim_in[i], (float*) h_full_graph->edge_data_ptr(), (int*)h_full_graph->row_start_ptr(), (int*)h_full_graph->edge_dst_ptr(), feat_in[i], out_temp[i]); // x*x; x*z; x*z
+    //        matmul(num_samples, dim_out[i], dim_in[i], out_temp[i], W_neigh[i], feat_in[i+1]); // x*y; y*z; x*z
+    //    }
+    //}
 
     //GPU computation
     //forward_layer 
+    cl_mem halo;
+    halo = clMallocRW(num_samples * dim_init * sizeof(float));
     for (int i = 0; i < layers_size; i++) {
         if (dim_in[i] > dim_out[i]) {
             clMatmul(   work_groups[i], 
@@ -119,23 +124,24 @@ int main (int argc, char * argv []) {
                         (cl_mem) d_feat_in[i], 
                         (cl_mem) d_W_neigh[i], 
                         (cl_mem) d_out_temp[i]); // x*y; y*z; x*z
+            std::cout << "clMatmul done" << std::endl;
             //aggr.aggregate(dim_out[i], *graph, d_out_temp, feat_out); // x*x; x*z; x*z
             clAvgAggr(  work_groups[i],
-                        full_graph->size(), 
+                        num_samples, 
                         dim_out[i], 
-                        (cl_mem) full_graph->edge_data_ptr(),   //<-- stopped checking here
-                        (cl_mem)full_graph->row_start_ptr(), 
-                        (cl_mem)full_graph->edge_dst_ptr(), 
+                        (cl_mem) full_graph->edge_data_ptr(),
+                        (cl_mem) full_graph->row_start_ptr(), 
+                        (cl_mem) full_graph->edge_dst_ptr(), 
                         (cl_mem) d_out_temp, 
                         (cl_mem) d_feat_in[i+1]);
         } else {
             clAvgAggr( work_groups[i], 
-                    full_graph-> size(), 
+                    num_samples, 
                     dim_in[i], 
                     (cl_mem) full_graph->edge_data_ptr(), 
                     (cl_mem)full_graph->row_start_ptr(), 
                     (cl_mem)full_graph->edge_dst_ptr(), 
-                    (const cl_mem) d_feat_in[i], 
+                    (cl_mem) d_feat_in[i], 
                     (cl_mem) d_out_temp);
             //aggr.aggregate(dim_in[0], *graph, in_data, d_in_temp1); // x*x; x*y; x*y
             clMatmul(   work_groups[i],

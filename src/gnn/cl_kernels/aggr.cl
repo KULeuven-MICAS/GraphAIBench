@@ -1,5 +1,5 @@
-__kernel void aggr (const int vlen,
-                    __global const float *A_nnz,
+__kernel void aggr (int vlen,
+                    __global const float  *A_nnz,
                     __global const int    *A_idx_ptr,
                     __global const int    *A_idx,
                     __global const float *B,

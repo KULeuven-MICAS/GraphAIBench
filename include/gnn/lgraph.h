@@ -137,22 +137,7 @@ public:
   index_t get_global_vid(int bid, index_t vid) { return idx_map[bid][vid]; }
   index_t get_range_index(int bid, index_t vid) { return range_indices[bid][vid]; }
 
-#ifndef ENABLE_GPU
-  index_t getEdgeDst(index_t eid) { return colidx_[eid]; }
-  index_t edge_begin(index_t vid) { return rowptr_[vid]; }
-  index_t edge_end(index_t vid) { return rowptr_[vid+1]; }
-  vdata_t getData(index_t vid) { return vertex_data_[vid]; }
-  //index_t getDegree(index_t vid) { return degrees_[vid]; }
-  index_t* row_start_ptr() { return &rowptr_[0]; }
-  const index_t* row_start_ptr() const { return &rowptr_[0]; }
-  index_t* edge_dst_ptr() { return &colidx_[0]; }
-  const index_t* edge_dst_ptr() const { return &colidx_[0]; }
-  //index_t* degrees_ptr() { return &degrees_[0]; }
-  edata_t* edge_data_ptr() { return &edge_data_[0]; }
-  vdata_t* vertex_data_ptr() { return &vertex_data_[0]; }
-  vdata_t get_vertex_data(index_t vid) { return vertex_data_[vid]; }
-  edata_t get_edge_data(index_t eid) { return edge_data_[eid]; }
-#else
+#ifdef ENABLE_GPU
   CUDA_HOSTDEV index_t getEdgeDst(index_t edge) { return d_colidx_[edge]; }
   CUDA_HOSTDEV index_t edge_begin(index_t src) { return d_rowptr_[src]; }
   CUDA_HOSTDEV index_t edge_end(index_t src) { return d_rowptr_[src + 1]; }
@@ -177,7 +162,31 @@ public:
   // const edata_t *edge_data_ptr() const { return d_edge_data; }
   //index_t* degrees_ptr() { return d_degrees_; }
   void print_test();
+#elif defined(VORTEX)
+  index_t edge_begin(index_t vid) { return rowptr_[vid]; }
+  index_t edge_end(index_t vid) { return rowptr_[vid+1]; }
+  index_t getEdgeDst(index_t eid) { return colidx_[eid]; }
+  edata_t* edge_data_ptr() { return d_edge_data_; }
+  const index_t* row_start_ptr() const { return d_rowptr_; }
+  index_t* edge_dst_ptr() { return d_colidx_; }
+#else
+  index_t getEdgeDst(index_t eid) { return colidx_[eid]; }
+  index_t edge_begin(index_t vid) { return rowptr_[vid]; }
+  index_t edge_end(index_t vid) { return rowptr_[vid+1]; }
+  vdata_t getData(index_t vid) { return vertex_data_[vid]; }
+  //index_t getDegree(index_t vid) { return degrees_[vid]; }
+  index_t* row_start_ptr() { return &rowptr_[0]; }
+  const index_t* row_start_ptr() const { return &rowptr_[0]; }
+  index_t* edge_dst_ptr() { return &colidx_[0]; }
+  const index_t* edge_dst_ptr() const { return &colidx_[0]; }
+  //index_t* degrees_ptr() { return &degrees_[0]; }
+  edata_t* edge_data_ptr() { return &edge_data_[0]; }
+  vdata_t* vertex_data_ptr() { return &vertex_data_[0]; }
+  vdata_t get_vertex_data(index_t vid) { return vertex_data_[vid]; }
+  edata_t get_edge_data(index_t eid) { return edge_data_[eid]; }
 #endif
+
+
 
   //void add_selfloop();
   void add_selfloop() {

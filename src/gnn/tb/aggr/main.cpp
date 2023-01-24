@@ -60,12 +60,12 @@ int main (int argc, char* argv[]){
     A_idx_d = clMallocRO(A_idx_ptr[vnum]*sizeof(int), true, A_idx);
     clLoadProgram("./bin/kernels/aggr.pocl","aggr");
     clSetArgs(0, 0, (void *) &vlen, sizeof(int));
-    clSetArgs(0, 1, (void *) &vnum, sizeof(int));
-    clSetArgs(0, 2, (void *) &A_d, sizeof(cl_mem));
-    clSetArgs(0, 3, (void *) &A_idx_ptr_d, sizeof(cl_mem));
-    clSetArgs(0, 4, (void *) &A_idx_d, sizeof(cl_mem));
-    clSetArgs(0, 5, (void *) &B_d, sizeof(cl_mem));
-    clSetArgs(0, 6, (void *) &C_d, sizeof(cl_mem));
+    //clSetArgs(0, 1, (void *) &vnum, sizeof(int));
+    clSetArgs(0, 1, (void *) &A_d, sizeof(cl_mem));
+    clSetArgs(0, 2, (void *) &A_idx_ptr_d, sizeof(cl_mem));
+    clSetArgs(0, 3, (void *) &A_idx_d, sizeof(cl_mem));
+    clSetArgs(0, 4, (void *) &B_d, sizeof(cl_mem));
+    clSetArgs(0, 5, (void *) &C_d, sizeof(cl_mem));
     size_t g_work_size[2] = {vnum, vlen};
     size_t l_work_size[2] = {8, 8};
     clInvokeKernel(0, 2, g_work_size, l_work_size);

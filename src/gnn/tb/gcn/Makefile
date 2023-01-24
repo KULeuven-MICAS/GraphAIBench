@@ -27,7 +27,7 @@ CXX=g++
 NVCC=nvcc
 IDIR=../../../../include/gnn
 INCLUDES=-I../../../../include/utils -I../../../../include/gnn -I../../../../include
-CFLAGS=$(INCLUDES) -fopenmp -pthread -Wall --std=c++11 -lboost_thread -lboost_system -DERRMSG -DDEBUGG #-fsanitize=address 
+CFLAGS=$(INCLUDES) -fopenmp -pthread -Wall --std=c++11 -lboost_thread -lboost_system -DERRMSG -DVORTEX #-fsanitize=address 
 
 VPATH += ../../cl_utils/
 VPATH += ../../
@@ -36,7 +36,7 @@ CFLAGS += $(VORTEX_LDFLAGS)
 CFLAGS += $(VORTEX_CXXFLAGS)
 
 ODIR=./obj
-OBJS = cl_utils.o reader.o lgraph.o cl_math_functions.o
+OBJS = cl_utils.o reader.o cl_math_functions.o
 
 OBJ = $(patsubst %,$(ODIR)/%,$(OBJS))
 
@@ -53,7 +53,7 @@ $(ODIR)/%.o: %.cpp
 	@mkdir -p $(@D)
 	$(CXX) -c -o $@ $< $(CFLAGS)
 
-$(ODIR)/%.o: %.cc
+$(ODIR)/lgraph.o: lgraph.cc
 	@mkdir -p $(@D)
 	$(CXX) -c -o $@ $< $(CFLAGS)
 
@@ -61,11 +61,11 @@ $(ODIR)/%.o: %.cc
 	@mkdir -p $(KBIN_DIR)
 	LLVM_PREFIX=$(LLVM_PREFIX) POCL_DEBUG=all LD_LIBRARY_PATH=$(LLVM_PREFIX)/lib:$(POCL_CC_PATH)/lib $(POCL_CC_PATH)/bin/poclcc -LLCFLAGS $(POCL_KERNEL_LLCFLAGS) -CFLAGS $(POCL_KERNEL_CFLAGS) -LDFLAGS $(POCL_KERNEL_LDFLAGS) -o $(KBIN_DIR)/$@ $<
 
-prova: main.cpp $(OBJ)
+prova: main.cpp $(OBJ) $(ODIR)/lgraph.o
 	@mkdir -p $(BIN_DIR)
 	$(CXX) -o $(BIN_DIR)/$@ $^ $(CFLAGS)
 
-run: prova aggr.pocl 
+run: prova $(KERNELS) 
 	LD_LIBRARY_PATH=$(POCL_RT_PATH)/lib:$(VORTEX_DRV_PATH)/simx:$(LD_LIBRARY_PATH) $(BIN_DIR)/prova
 
 .PHONY: clean
