@@ -1,4 +1,5 @@
-__kernel void aggr (int vlen,
+__kernel void aggr (int vnum,
+                    int vlen,
                     __global const float  *A_nnz,
                     __global const int    *A_idx_ptr,
                     __global const int    *A_idx,
@@ -9,7 +10,7 @@ __kernel void aggr (int vlen,
     const int i = get_global_id(0); // Row ID
     const int j = get_global_id(1); // Col ID
 
-    if (i >= vlen || j >= vlen) return; //TODO error here on i check!
+    if (i >= vnum || j >= vlen) return; 
     for (int e = A_idx_ptr[i]; e < A_idx_ptr[i+1]; e++) {
         C[i * vlen + j] += A_nnz[A_idx[e]] * B[i * vlen + j];
     }

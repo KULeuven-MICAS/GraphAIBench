@@ -12,12 +12,13 @@ void clAvgAggr(struct oclKernelParamStruct work_groups, size_t vnum, size_t vlen
     std::cout << "Loading program avg_aggr: " << kernel_path <<std::endl;
     clLoadProgram(kernel_path.c_str(), "aggr");
     std::cout << "Program loaded" << std::endl;
-    clSetArgs(1, 0, (void *) &vlen, sizeof(int));
-    clSetArgs(1, 1, (void *) &A_nonzeros, sizeof(cl_mem));
-    clSetArgs(1, 2, (void *) &A_idx_ptr, sizeof(cl_mem));
-    clSetArgs(1, 3, (void *) &A_nnz_idx, sizeof(cl_mem));
-    clSetArgs(1, 4, (void *) &B, sizeof(cl_mem));
-    clSetArgs(1, 5, (void *) &C, sizeof(cl_mem));
+    clSetArgs(1, 0, (void *) &vnum, sizeof(int));
+    clSetArgs(1, 1, (void *) &vlen, sizeof(int));
+    clSetArgs(1, 2, (void *) &A_nonzeros, sizeof(cl_mem));
+    clSetArgs(1, 3, (void *) &A_idx_ptr, sizeof(cl_mem));
+    clSetArgs(1, 4, (void *) &A_nnz_idx, sizeof(cl_mem));
+    clSetArgs(1, 5, (void *) &B, sizeof(cl_mem));
+    clSetArgs(1, 6, (void *) &C, sizeof(cl_mem));
     make_global_work_group_even(work_dim, work_groups.global_work_size, work_groups.local_work_size);
     clInvokeKernel(1, work_dim, work_groups.global_work_size, work_groups.local_work_size);
 }
