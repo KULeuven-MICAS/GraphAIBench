@@ -452,7 +452,6 @@ void clLoadProgram(const char* filename, std::string kernel_name) {
 	oclHandles.kernel.push_back(kernel);
   std::cout << "---Program loaded!" << std::endl;
 	//Add code here print allocation info
-  return kernel;
 }
 
 //--enqueue kernel execution

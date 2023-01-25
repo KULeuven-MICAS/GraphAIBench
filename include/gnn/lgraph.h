@@ -167,8 +167,11 @@ public:
   index_t edge_end(index_t vid) { return rowptr_[vid+1]; }
   index_t getEdgeDst(index_t eid) { return colidx_[eid]; }
   edata_t* edge_data_ptr() { return d_edge_data_; }
+  edata_t* host_edge_data_ptr() { return &edge_data_[0]; }
   const index_t* row_start_ptr() const { return d_rowptr_; }
+  const index_t* host_row_start_ptr() const { return &rowptr_[0]; }
   index_t* edge_dst_ptr() { return d_colidx_; }
+  index_t* host_edge_dst_ptr() { return &colidx_[0]; }
 #else
   index_t getEdgeDst(index_t eid) { return colidx_[eid]; }
   index_t edge_begin(index_t vid) { return rowptr_[vid]; }

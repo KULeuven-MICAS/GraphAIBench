@@ -19,7 +19,7 @@ void clAvgAggr(struct oclKernelParamStruct work_groups, size_t vnum, size_t vlen
     clSetArgs(1, 4, (void *) &B, sizeof(cl_mem));
     clSetArgs(1, 5, (void *) &C, sizeof(cl_mem));
     make_global_work_group_even(work_dim, work_groups.global_work_size, work_groups.local_work_size);
-    clInvokeKernel(0, 2, work_groups.global_work_size, work_groups.local_work_size);
+    clInvokeKernel(1, work_dim, work_groups.global_work_size, work_groups.local_work_size);
 }
 
 void clMatmul(struct oclKernelParamStruct work_groups, const size_t x, const size_t y, const size_t z, const cl_mem A, const cl_mem B, cl_mem C){

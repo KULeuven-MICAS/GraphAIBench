@@ -13,7 +13,7 @@ __kernel void sgemm (int x,
     // Compute a single element (loop a K)
     float acc = 0.0f;
     for (int k = 0; k < z; k++) {
-      acc += A[i*z+k] * B[k*z+j];
+      acc += A[i*z+k] * B[k*y+j];
     }
     // Store the result
     C[i * y + j] = acc;
