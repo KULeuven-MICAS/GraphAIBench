@@ -3,7 +3,11 @@
 #include <random>
 #include <CL/cl.h>
 #include "global.h"
+
 #include <cmath>
+#include <stdexcept>
+#include <exception>
+#include <algorithm>
 
 extern struct oclHandleStruct oclHandles;
 struct oclHandleStruct {
@@ -15,6 +19,7 @@ struct oclHandleStruct {
   cl_event event;
   std::string error_str;
   std::vector<cl_kernel> kernel;
+  std::vector<std::string> kernel_ids;
 };
 
 struct oclKernelParamStruct {
@@ -22,25 +27,28 @@ struct oclKernelParamStruct {
   size_t* local_work_size;
 };
 
-//TODO init param is useless, should check on validity of h_mem_ptr!
-cl_mem clMallocRO(int size, bool init = false, void *h_mem_ptr = NULL) throw(std::string);
-cl_mem clMallocWO(int size, bool init = false, void *h_mem_ptr = NULL) throw(std::string);
-cl_mem clMallocRW(int size, bool init = false, void *h_mem_ptr = NULL) throw(std::string);
-void clFree(cl_mem ob) throw(std::string);
-cl_mem clReallocRO(cl_mem ob, int size, bool init = false, void *h_mem_ptr = NULL) throw(std::string);
-cl_mem clReallocWO(cl_mem ob, int size, bool init = false, void *h_mem_ptr = NULL) throw(std::string);
-cl_mem clReallocRW(cl_mem ob, int size, bool init = false, void *h_mem_ptr = NULL) throw(std::string);
-void clMemcpyH2D(cl_mem d_mem, int size, const void *h_mem_ptr) throw(std::string);
-void clMemcpyD2H(cl_mem d_mem, int size, void *h_mem) throw(std::string);
+cl_mem clMallocRO(int size, void *h_mem_ptr = NULL);
+cl_mem clMallocWO(int size, void *h_mem_ptr = NULL);
+cl_mem clMallocRW(int size, void *h_mem_ptr = NULL);
+void clFree(cl_mem ob);
+cl_mem clReallocRO(cl_mem ob, int size, void *h_mem_ptr = NULL);
+cl_mem clReallocWO(cl_mem ob, int size, void *h_mem_ptr = NULL);
+cl_mem clReallocRW(cl_mem ob, int size, void *h_mem_ptr = NULL);
+
+void clMemcpyH2D(cl_mem d_mem, int size, const void *h_mem_ptr);
+void clMemcpyD2H(cl_mem d_mem, int size, void *h_mem);
+
 template <typename T>
-void clInitConstMem(int size, T initValue, cl_mem d_mem_ptr) throw(std::string);
+void clInitConstMem(int size, T initValue, cl_mem d_mem_ptr);
+
 template<typename T>
 T random(T range_from, T range_to);
-void clInitRangeUniformMem(int size, const float_t a, const float_t b, cl_mem d_mem_ptr) throw(std::string);
+void clInitRangeUniformMem(int size, const float_t a, const float_t b, cl_mem d_mem_ptr);
 
 void clInit();
 void clRelease();
-void clSetArgs(int kernel_id, int arg_idx, void *d_mem, int size = 0) throw(std::string);
+void clSetArgs(std::string kernel_name, int arg_idx, void *d_mem, int size = 0);
 void clLoadProgram(const char* filename, std::string kernel_name);
-void clInvokeKernel(int kernel_id, cl_uint work_dim, size_t* g_work_size, size_t* l_work_size) throw(std::string);
+void clInvokeKernel(std::string kernel_name, cl_uint work_dim, size_t* g_work_size, size_t* l_work_size);
+
 void make_global_work_group_even(int work_dim, size_t *&g_work_group, size_t *&l_work_group);

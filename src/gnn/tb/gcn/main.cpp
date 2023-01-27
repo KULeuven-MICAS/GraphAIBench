@@ -95,14 +95,14 @@ int main (int argc, char * argv []) {
     float init_range;
     for (int i = 0; i < layers_size; i++) {
         d_out_temp[i] = (float*)clMallocRW(num_samples * dim_out[i] * sizeof(float));
-        d_W_neigh[i]  = (float*)clMallocRW(dim_in[i] * dim_out[i] * sizeof(float), true, W_neigh[i]);
+        d_W_neigh[i]  = (float*)clMallocRW(dim_in[i] * dim_out[i] * sizeof(float), W_neigh[i]);
         //clMemcpyH2D((cl_mem)d_W_neigh[i], dim_in[i] * dim_out[i] * sizeof(float), W_neigh[i]);
         if (dim_in[i] <= dim_out[i])
             d_out_temp[i] = (float*)clMallocRW(num_samples * dim_in[i] * sizeof(float));
         else
             d_out_temp[i] = (float*)clMallocRW(num_samples * dim_out[i] * sizeof(float));
         if (i > 0)
-            d_feat_in[i] = (float*)clMallocRW(num_samples * dim_in[i] * sizeof(float), true, feat_in[i]);
+            d_feat_in[i] = (float*)clMallocRW(num_samples * dim_in[i] * sizeof(float), feat_in[i]);
         work_groups[i].global_work_size = (size_t*) malloc(2 * sizeof(size_t));
         work_groups[i].global_work_size[0] = num_samples;
         work_groups[i].global_work_size[1] = dim_in[i];
@@ -116,19 +116,20 @@ int main (int argc, char * argv []) {
     //DEBUG GPU DATA
     //float *de;
     //de = (float*)malloc(h_full_graph->sizeEdges() * sizeof(float));
-    //std::cout << "Limit: " << h_full_graph->host_row_start_ptr()[32] << std::endl;
+    //std::cout << "Limit: " << h_full_graph->row_start_host_ptr()[32] << std::endl;
     //clMemcpyD2H((cl_mem)full_graph->edge_data_ptr(), h_full_graph->sizeEdges() * sizeof(float), de);
-    //for (int j=0; j<h_full_graph->sizeEdges(); j++) if (de[h_full_graph->host_edge_dst_ptr()[j]]!= h_full_graph->host_edge_data_ptr()[h_full_graph->host_edge_dst_ptr()[j]]) std::cout << "ERROR " << j << std::endl;
-    //for (int j=0; j<3; j++) std::cout << "copied " << de[h_full_graph->host_edge_dst_ptr()[j]] << std::endl;
-    //for (int j=0; j<3; j++) std::cout << "host " << h_full_graph->host_edge_data_ptr()[h_full_graph->host_edge_dst_ptr()[j]] << std::endl;
+    ////for (int j=0; j<h_full_graph->sizeEdges(); j++) if (de[h_full_graph->host_edge_dst_ptr()[j]]!= h_full_graph->host_edge_data_ptr()[h_full_graph->host_edge_dst_ptr()[j]]) std::cout << "ERROR " << j << std::endl;
+    //for (int j=4; j<8; j++) std::cout << "copied " << de[h_full_graph->edge_dst_host_ptr()[j]] << std::endl;
+    //for (int j=4; j<8; j++) std::cout << "host " << h_full_graph->edge_data_host_ptr()[h_full_graph->edge_dst_host_ptr()[j]] << std::endl;
 
     //CPU computation
     for (int i = 0; i < layers_size; i++) {
         if (dim_in[i] > dim_out[i]) {
             matmul(num_samples, dim_out[i], dim_in[i], feat_in[i], W_neigh[i], out_temp[i]); // x*y; y*z; x*z
-            aggr(num_samples, dim_out[i], (float*) h_full_graph->host_edge_data_ptr(), (int*)h_full_graph->host_row_start_ptr(), (int*)h_full_graph->host_edge_dst_ptr(), out_temp[i], feat_in[i+1]); // x*x; x*z; x*z
+            //std::cout << "IN: " << out_temp[i][16] << std::endl;
+            aggr(num_samples, dim_out[i], (float*) h_full_graph->edge_data_host_ptr(), (int*)h_full_graph->row_start_host_ptr(), (int*)h_full_graph->edge_dst_host_ptr(), out_temp[i], feat_in[i+1]); // x*x; x*z; x*z
         } else {
-            aggr(num_samples, dim_in[i], (float*) h_full_graph->host_edge_data_ptr(), (int*)h_full_graph->host_row_start_ptr(), (int*)h_full_graph->host_edge_dst_ptr(), feat_in[i], out_temp[i]); // x*x; x*z; x*z
+            aggr(num_samples, dim_in[i], (float*) h_full_graph->edge_data_host_ptr(), (int*)h_full_graph->row_start_host_ptr(), (int*)h_full_graph->edge_dst_host_ptr(), feat_in[i], out_temp[i]); // x*x; x*z; x*z
             matmul(num_samples, dim_out[i], dim_in[i], out_temp[i], W_neigh[i], feat_in[i+1]); // x*y; y*z; x*z
         }
     }
@@ -233,17 +234,20 @@ int main (int argc, char * argv []) {
     	    if (!almost_equal(feat_in[i][j], ref_feat_in[i][j])) {
                 std::cout << "Error at " << j << std::endl;
                 std::cout << "Host:" << feat_in[i][j] << "\tDevice:" << ref_feat_in[i][j] << std::endl;
-                if (dim_in[i-1] > dim_in[i-1]){
+                if (dim_in[i-1] > dim_out[i-1]){
                     std::cout << "Error trace for aggr" << std::endl;
                     int node = floor(j/dim_in[i]);
+                    std::cout << "NODE:" << node << std::endl;
                     int feature = j%dim_in[i];
+                    std::cout << "FEATURE:" << feature << std::endl;
                     float *de;
                     de = (float*)malloc(full_graph->sizeEdges() * sizeof(float));
                     clMemcpyD2H((cl_mem)full_graph->edge_data_ptr(), full_graph->sizeEdges() * sizeof(float), de);
                     std::cout << "InputHost:" << out_temp[i-1][j] << "\tInputDevice:" << ref_out_temp[i-1][j] << std::endl;
-                    std::cout << "EdgesHost:" << h_full_graph->row_start_ptr()[node+1] - h_full_graph->row_start_ptr()[node] << "\tEdgesDevice:" << full_graph->row_start_ptr()[node+1] - full_graph->row_start_ptr()[node] << std::endl;
-                    for (int k = h_full_graph->row_start_ptr()[node]; k <h_full_graph->row_start_ptr()[node+1]; k++) {
-                        std::cout << "EdgeHost:" << h_full_graph->edge_data_ptr()[h_full_graph->edge_dst_ptr()[k]] << "\tEdgeDevice:" << de[h_full_graph->edge_dst_ptr()[k]] << std::endl;
+                    std::cout << "EdgesHost:" << (h_full_graph->row_start_host_ptr()[node+1] - h_full_graph->row_start_host_ptr()[node]) << std::endl; //"\tEdgesDevice:" << de->host_row_start_ptr()[node+1] - de->host_row_start_ptr()[node] << std::endl;
+                    for (int k = h_full_graph->row_start_host_ptr()[node]; k <h_full_graph->row_start_host_ptr()[node+1]; k++) {
+                        std::cout << "K:" << k << std::endl;
+                        std::cout << "EdgeHost:" << h_full_graph->edge_data_host_ptr()[h_full_graph->edge_dst_host_ptr()[k]] << "\tEdgeDevice:" << de[h_full_graph->edge_dst_host_ptr()[k]] << std::endl;
                     }
                 } else {
                     std::cout << "Error trace not implemented " << std::endl;
@@ -284,11 +288,14 @@ int main (int argc, char * argv []) {
     free(feat_in[layers_size]);
     clRelease();
     for (size_t i = 0; i < layers_size; i++){
+        std::cout << "Freeing " << i << std::endl;
         clFree((cl_mem)d_W_neigh[i]);
         clFree((cl_mem)d_feat_in[i]);
         clFree((cl_mem)d_out_temp[i]);
     }
+    std::cout << "Done" << std::endl;
     clFree((cl_mem)d_feat_in[layers_size]);
+    std::cout << "Done" << std::endl;
     return 0;
 }
 
@@ -296,18 +303,18 @@ int main (int argc, char * argv []) {
 // 1. Add support for vortex to lgraph
 // 2. Add support for random init graph?
 
-static void aggr(const int vlen, const int vnum, const float *A, const int *A_idx_ptr, const int *A_idx, const float *B, float *C){
+static void aggr(const int vnum, const int vlen, const float *A, const int *A_idx_ptr, const int *A_idx, const float *B, float *C){
     vec_t neighbor(vlen);
     for (int i = 0; i < vnum; i++){
         for (int j = A_idx_ptr[i]; j < A_idx_ptr[i+1]; j++){
-            //if (j==0 && i==0) std::cout << "EDGE: " << A_idx_ptr[i+1] - A_idx_ptr[i] << std::endl;
+            //if (j==0 && i==1) std::cout << "EDGE: " << A_idx_ptr[i+1] - A_idx_ptr[i] << std::endl;
             for (int k = 0; k < vlen; k++){
                 neighbor[k] = B[i*vlen+k] * A[A_idx[j]];
-                //if (k==0) std::cout << "B: " << B[i*vlen+k] << " A: " << A[A_idx[j]] << " N:" << neighbor[k] << std::endl;
+                //if (i==1 && k==0) std::cout << "B: " << B[i*vlen+k] << " A: " << A[A_idx[j]] << " N:" << neighbor[k] << std::endl;
             }
             for (int k = 0; k < vlen; k++){
                 C[i*vlen+k] += neighbor[k];
-                //if (k==0) std::cout << "C: " << C[i*vlen+k] << " N:" << neighbor[k] << std::endl;
+                //if (i==1 && k==0) std::cout << "C: " << C[i*vlen+k] << " N:" << neighbor[k] << std::endl;
             }
         }
     //std::cout << "C: " << C[0] << std::endl;

@@ -7,7 +7,7 @@ void LearningGraph::alloc_on_device() {
   if (d_rowptr_ == NULL) {
     std::cout << "Allocating rowptr on device" << std::endl;
     d_rowptr_ = (index_t*) clMallocRW((num_vertices_+1)*sizeof(index_t));
-    gpu_vsize = num_vertices_;
+    gpu_vsize = num_vertices_+1;
   }
   if (d_colidx_ && gpu_esize < num_edges_) clFree((cl_mem) d_colidx_);
   if (d_colidx_ == NULL) {
@@ -24,14 +24,14 @@ void LearningGraph::alloc_on_device() {
 
 void LearningGraph::alloc_on_device(index_t n) {
   d_rowptr_ = (index_t*) clMallocRW((n+1)*sizeof(index_t));
-  gpu_vsize = n;
+  gpu_vsize = n+1;
 }
 
 void LearningGraph::copy_to_gpu() {
   assert(d_rowptr_);
   assert(d_colidx_);
   assert(d_edge_data_);
-  std::cout << "Copying graph to VORTEX" << std::endl;
+  
   clMemcpyH2D((cl_mem) d_rowptr_, (num_vertices_+1)*sizeof(index_t), (void*) row_start_host_ptr());
   clMemcpyH2D((cl_mem) d_colidx_, num_edges_*sizeof(index_t), (void*) edge_dst_host_ptr());
   clMemcpyH2D((cl_mem) d_edge_data_, num_edges_*sizeof(edata_t), (void*) edge_data_);

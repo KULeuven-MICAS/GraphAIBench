@@ -15,13 +15,13 @@ int main (int argc, char* argv[]){
 
     //CPU data 
     int vlen = 16;
-    int vnum = 16;
+    int vnum = 32;
     float *A;
     float *B = (float*)malloc(vlen*vnum*sizeof(float));
     float *C = (float*)malloc(vlen*vnum*sizeof(float));
     float *H = (float*)malloc(vlen*vnum*sizeof(float));
     int *A_idx_ptr = (int*)malloc((vnum+1)*sizeof(int));
-    int *A_idx = (int*)malloc((vlen)*(vlen)*sizeof(int));
+    int *A_idx = (int*)malloc((vnum)*(vnum)*sizeof(int));
 
     //GPU data
     cl_mem A_d, B_d, C_d, A_idx_ptr_d, A_idx_d;
@@ -53,22 +53,22 @@ int main (int argc, char* argv[]){
 
     //Exec OpenCL
     clInit();
-    A_d = clMallocRO(A_idx_ptr[vnum]*sizeof(float), true, A);
-    B_d = clMallocRO(vlen*vnum*sizeof(float), true, B);
-    C_d = clMallocWO(vlen*vnum*sizeof(float), true, C);
-    A_idx_ptr_d = clMallocRO((vnum+1)*sizeof(int), true, A_idx_ptr);
-    A_idx_d = clMallocRO(A_idx_ptr[vnum]*sizeof(int), true, A_idx);
+    A_d = clMallocRO(A_idx_ptr[vnum]*sizeof(float), A);
+    B_d = clMallocRO(vlen*vnum*sizeof(float), B);
+    C_d = clMallocWO(vlen*vnum*sizeof(float), C);
+    A_idx_ptr_d = clMallocRO((vnum+1)*sizeof(int), A_idx_ptr);
+    A_idx_d = clMallocRO(A_idx_ptr[vnum]*sizeof(int), A_idx);
     clLoadProgram("./bin/kernels/aggr.pocl","aggr");
-    clSetArgs(0, 0, (void *) &vlen, sizeof(int));
-    //clSetArgs(0, 1, (void *) &vnum, sizeof(int));
-    clSetArgs(0, 1, (void *) &A_d, sizeof(cl_mem));
-    clSetArgs(0, 2, (void *) &A_idx_ptr_d, sizeof(cl_mem));
-    clSetArgs(0, 3, (void *) &A_idx_d, sizeof(cl_mem));
-    clSetArgs(0, 4, (void *) &B_d, sizeof(cl_mem));
-    clSetArgs(0, 5, (void *) &C_d, sizeof(cl_mem));
+    clSetArgs(0, 0, (void *) &vnum, sizeof(int));
+    clSetArgs(0, 1, (void *) &vlen, sizeof(int));
+    clSetArgs(0, 2, (void *) &A_d, sizeof(cl_mem));
+    clSetArgs(0, 3, (void *) &A_idx_ptr_d, sizeof(cl_mem));
+    clSetArgs(0, 4, (void *) &A_idx_d, sizeof(cl_mem));
+    clSetArgs(0, 5, (void *) &B_d, sizeof(cl_mem));
+    clSetArgs(0, 6, (void *) &C_d, sizeof(cl_mem));
     size_t g_work_size[2] = {vnum, vlen};
     size_t l_work_size[2] = {8, 8};
-    clInvokeKernel(0, 2, g_work_size, l_work_size);
+    clInvokeKernel("aggr", 2, g_work_size, l_work_size);
     clMemcpyD2H(C_d, vlen*vnum*sizeof(float), (void*) C);
     clFinish(oclHandles.queue);
 
@@ -84,9 +84,9 @@ int main (int argc, char* argv[]){
         }
     }
     if (err == 0){
-        printf("Test passed!");
+        printf("Test passed!\n");
     }else{
-        printf("Test failed!");
+        printf("Test failed!\n");
     }
     clRelease();
     free(A);
@@ -136,7 +136,7 @@ float * gen_spm(const int vlen, const int vnum, float *A, int *A_idx_ptr, int *A
         for (int j = 0; j < vnum*vnum; j++){
             rrr = random<float>( -1.0f, 1.0f);
             if (abs(rrr) >= 0.98f){
-                A_idx[nnz] = nnz;
+                A_idx[nnz] = j%vnum;
                 nnz++;
             }
         }
