@@ -156,7 +156,7 @@ int main (int argc, char * argv []) {
         }
     }
 
-    clFinish(oclHandles.queue);
+    //clFinish(oclHandles.queue);
     //checkup
     float* ref_out_temp[layers_size];
     float* ref_feat_in[layers_size+1];

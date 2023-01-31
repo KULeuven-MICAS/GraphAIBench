@@ -66,7 +66,7 @@ prova: main.cpp $(OBJ) $(ODIR)/lgraph.o
 	$(CXX) -o $(BIN_DIR)/$@ $^ $(CFLAGS)
 
 run: prova $(KERNELS) 
-	LD_LIBRARY_PATH=$(POCL_RT_PATH)/lib:$(VORTEX_DRV_PATH)/simx:$(LD_LIBRARY_PATH) $(BIN_DIR)/prova
+	LD_LIBRARY_PATH=$(POCL_RT_PATH)/lib:$(VORTEX_DRV_PATH)/simx:$(LD_LIBRARY_PATH) valgrind $(BIN_DIR)/prova
 
 .PHONY: clean
 clean:
