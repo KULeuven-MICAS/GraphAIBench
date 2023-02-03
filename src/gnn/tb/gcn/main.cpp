@@ -231,7 +231,8 @@ int main (int argc, char * argv []) {
         free(ref_out_temp[i]);
         free(ref_feat_in[i]);
         free(W_neigh[i]);
-        free(feat_in[i]);
+        if (i>0) free(feat_in[i]);
+        //free(feat_in[i]);
         free(out_temp[i]);
     }
     free(ref_feat_in[layers_size]);
@@ -243,6 +244,7 @@ int main (int argc, char * argv []) {
         clFree((cl_mem)d_out_temp[i]);
     }
     clFree((cl_mem)d_feat_in[layers_size]);
+    std::cout << "Test passed" << std::endl;
     return 0;
 }
 
