@@ -248,10 +248,6 @@ int main (int argc, char * argv []) {
     return 0;
 }
 
-//TODO
-// 1. Add support for vortex to lgraph
-// 2. Add support for random init graph?
-
 static void aggr(const int vnum, const int vlen, const float *A, const int *A_idx_ptr, const int *A_idx, const float *B, float *C){
     vec_t neighbor(vlen);
     for (int i = 0; i < vnum; i++){

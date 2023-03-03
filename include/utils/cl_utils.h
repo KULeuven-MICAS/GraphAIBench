@@ -38,7 +38,7 @@ cl_mem clReallocRW(cl_mem ob, int size, void *h_mem_ptr = NULL);
 void clMemcpyH2D(cl_mem d_mem, int size, const void *h_mem_ptr);
 void clMemcpyD2H(cl_mem d_mem, int size, void *h_mem);
 
-template <typename T>
+template<typename T>
 void clInitConstMem(int size, T initValue, cl_mem d_mem_ptr);
 
 template<typename T>

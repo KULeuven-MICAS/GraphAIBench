@@ -1,5 +1,5 @@
 
-/tmp/pocl_vortex_kernel-f8-c8-ae-fb-e1.elf:	file format ELF32-riscv
+/tmp/pocl_vortex_kernel-69-57-f3-2b-4e.elf:	file format ELF32-riscv
 
 
 Disassembly of section .init:
@@ -1630,11 +1630,13 @@ Disassembly of section .strtab:
       3e: 5f 6b 65 72                  	<unknown>
       42: 6e 65                        	<unknown>
       44: 6c 2d                        	<unknown>
-      46: 31 32                        	<unknown>
-      48: 2d 61                        	<unknown>
-      4a: 37 2d 66 39                  	lui	s10, 235106
-      4e: 2d 35                        	<unknown>
-      50: 37 2d 63 63                  	lui	s10, 407090
+      46: 64 64                        	<unknown>
+      48: 2d 36                        	<unknown>
+      4a: 32 2d                        	<unknown>
+      4c: 32 65                        	<unknown>
+      4e: 2d 30                        	<unknown>
+      50: 61 2d                        	<unknown>
+      52: 62 61                        	<unknown>
       54: 2e 63                        	<unknown>
       56: 00 70                        	<unknown>
       58: 61 72                        	<unknown>
