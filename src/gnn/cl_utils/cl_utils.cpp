@@ -337,6 +337,43 @@ void clInvokeKernel(std::string kernel_name, cl_uint work_dim, size_t* g_work_si
   clErrorHandle(oclHandles.cl_status);
 }
 
+void optimizeWorkDimentions(int work_dim, int* work_groups_dim, struct oclKernelParamStruct &work_groups){
+  if (work_groups.global_work_size != NULL){
+    return;
+  }
+  work_groups.global_work_size = (size_t*)malloc(work_dim * sizeof(size_t));
+  work_groups.local_work_size = (size_t*)malloc(work_dim * sizeof(size_t));
+  for (int i = 0; i < work_dim; i++) {
+    work_groups.global_work_size[i] = work_groups_dim[i];
+    work_groups.local_work_size[i] = 1; //1 will always grant full HW utilization, but not optimal execution time!
+  }
+  #ifdef VORTEX
+    int hw_virtual_threads_count = NUM_THREADS*NUM_WARPS*NUM_CORES;
+    std::cout << "------>[RUNTIME-INFO] HW capabilities: " << hw_virtual_threads_count << std::endl;
+    int total_work_items = 1;
+    for (int i = 0; i < work_dim; i++) {
+      total_work_items *= work_groups.global_work_size[i];
+    }
+    if (total_work_items < hw_virtual_threads_count) {
+      std::cout << "WARNING: total_work_size is smaller than HW capabilities! The execution will be highly inefficient..." << std::endl;
+    }
+    int local_work_size = 1;
+    for (int i = 0; i < work_dim; i++) { //each loop find the optimum for one local work dimention
+      if (work_groups.global_work_size[i]<hw_virtual_threads_count)
+        std::cout << "WARNING: global_work_size[" << i << "] is smaller than HW capabilities!" << std::endl;
+      local_work_size = work_groups.global_work_size[i]/hw_virtual_threads_count;
+      work_groups.local_work_size[i] = local_work_size ? local_work_size : 1;
+    }
+  #endif
+    make_global_work_group_even(work_dim, work_groups.global_work_size, work_groups.local_work_size);
+    for (int i = 0; i < work_dim; i++) {
+      std::cout << "------>[RUNTIME-INFO] global_work_size[" << i << "] = " << work_groups.global_work_size[i] << std::endl;
+      std::cout << "------>[RUNTIME-INFO] local_work_size[" << i << "] = " << work_groups.local_work_size[i] << std::endl;
+    }
+  return;
+}
+
+
 void make_global_work_group_even(int work_dim, size_t *&g_work_group, size_t *&l_work_group){
   for (int i = 0; i < work_dim; i++) 
     if (g_work_group[i] % l_work_group[i] != 0) 

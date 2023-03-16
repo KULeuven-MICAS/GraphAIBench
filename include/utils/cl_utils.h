@@ -3,11 +3,16 @@
 #include <random>
 #include <CL/cl.h>
 #include "global.h"
+#include <assert.h>
 
 #include <cmath>
 #include <stdexcept>
 #include <exception>
 #include <algorithm>
+
+#ifdef VORTEX
+#include "VX_config.h"
+#endif
 
 extern struct oclHandleStruct oclHandles;
 struct oclHandleStruct {
@@ -52,3 +57,4 @@ void clLoadProgram(const char* filename, std::string kernel_name);
 void clInvokeKernel(std::string kernel_name, cl_uint work_dim, size_t* g_work_size, size_t* l_work_size);
 
 void make_global_work_group_even(int work_dim, size_t *&g_work_group, size_t *&l_work_group);
+void optimizeWorkDimentions(int work_dim, int* work_groups_dim, struct oclKernelParamStruct &work_groups);
