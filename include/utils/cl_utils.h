@@ -52,6 +52,7 @@ void clInitRangeUniformMem(int size, const float_t a, const float_t b, cl_mem d_
 
 void clInit();
 void clRelease();
+size_t clGetMaxWorkGroupSize();
 void clSetArgs(std::string kernel_name, int arg_idx, void *d_mem, int size = 0);
 void clLoadProgram(const char* filename, std::string kernel_name);
 void clInvokeKernel(std::string kernel_name, cl_uint work_dim, size_t* g_work_size, size_t* l_work_size);

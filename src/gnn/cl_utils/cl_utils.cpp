@@ -187,12 +187,19 @@ void clInit(){
 	std::cout << "Creating the command queue..." << std::endl;
 
 	oclHandles.queue = clCreateCommandQueue(oclHandles.context, oclHandles.devices[DEVICE_ID_INUSED], 0, &resultCL);
-  	if ((resultCL != CL_SUCCESS) || (oclHandles.queue == NULL)) {
-      std::cerr << "InitCL()::Error: Creating Command Queue. (clCreateCommandQueue)" << std::endl;
-      std::cerr << "Error code: " << resultCL << std::endl;
-      if (oclHandles.queue == NULL) std::cerr << "Queue is NULL " << std::endl;
-      throw(std::string("InitCL()::Creating Command Queue. (clCreateCommandQueue)"));
-    }
+  if ((resultCL != CL_SUCCESS) || (oclHandles.queue == NULL)) {
+    std::cerr << "InitCL()::Error: Creating Command Queue. (clCreateCommandQueue)" << std::endl;
+    std::cerr << "Error code: " << resultCL << std::endl;
+    if (oclHandles.queue == NULL) std::cerr << "Queue is NULL " << std::endl;
+    throw(std::string("InitCL()::Creating Command Queue. (clCreateCommandQueue)"));
+  }
+}
+
+// get max work group size
+size_t clGetMaxWorkGroupSize() {
+  size_t max_local_work_size = 0;
+  clGetDeviceInfo(oclHandles.devices[DEVICE_ID_INUSED], CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(size_t), &max_local_work_size, NULL);
+  return max_local_work_size;
 }
 
 // release CL objects
@@ -337,6 +344,14 @@ void clInvokeKernel(std::string kernel_name, cl_uint work_dim, size_t* g_work_si
   clErrorHandle(oclHandles.cl_status);
 }
 
+int genTotalWorkGroups(int work_dim, size_t* l_work_size){
+  int total_work_groups = 1;
+  for (int i = 0; i < work_dim; i++) {
+    total_work_groups *= l_work_size[i];
+  }
+  return total_work_groups;
+}
+
 void optimizeWorkDimentions(int work_dim, int* work_groups_dim, struct oclKernelParamStruct &work_groups){
   if (work_groups.global_work_size != NULL){
     return;
@@ -363,6 +378,16 @@ void optimizeWorkDimentions(int work_dim, int* work_groups_dim, struct oclKernel
         std::cout << "WARNING: global_work_size[" << i << "] is smaller than HW capabilities!" << std::endl;
       local_work_size = work_groups.global_work_size[i]/hw_virtual_threads_count;
       work_groups.local_work_size[i] = local_work_size ? local_work_size : 1;
+    }
+    //avoiding overflows
+    size_t max_tot_local_work_size = clGetMaxWorkGroupSize();
+    while (genTotalWorkGroups(work_dim, work_groups.local_work_size) > max_tot_local_work_size) {
+      for (int i = work_dim-1; i >= 0; i--) {
+        if (work_groups.local_work_size[i] > 1) {
+          work_groups.local_work_size[i] /= 2;
+          break;
+        }
+      }
     }
   #endif
     make_global_work_group_even(work_dim, work_groups.global_work_size, work_groups.local_work_size);
