@@ -3,9 +3,9 @@
 
 template <typename Aggregator>
 graph_conv_layer<Aggregator>::graph_conv_layer(int id, int nv, int din, int dout, Graph *g,
-                      bool act, bool concat, float lr, float feat_drop, float score_drop) :
+                      bool act, bool concat, float lr, float feat_drop, float score_drop, std::string feats_drop_file /*= ""*/)  :
     level_(id), num_samples(nv), dim_in(din), dim_out(dout), graph(g), is_act(act),
-    is_bias(false), use_concat(concat), feat_dropout_rate(feat_drop), score_dropout_rate(score_drop) {
+    is_bias(false), use_concat(concat), feat_dropout_rate(feat_drop), score_dropout_rate(score_drop), feats_drop_file(feats_drop_file) {
   //std::cout << "DEBUG: " << "GCN Layer " << level_ << " allocating memory: [" << num_samples << " x " << dim_in << "]" << std::endl;
 	//std::cout << "\tID: " << id << "\t NV: " << nv << std::endl; 
 	//std::cout << "\tC: "  << din << "\t K: " << dout << std::endl;
@@ -55,6 +55,16 @@ graph_conv_layer<Aggregator>::graph_conv_layer(int id, int nv, int din, int dout
 template <typename Aggregator>
 void graph_conv_layer<Aggregator>::update_dim_size(size_t x) {
   num_samples = x;
+}
+
+template <typename Aggregator>
+void graph_conv_layer<Aggregator>::dump_feats_to_file(float *feats, int size) {
+  std::ofstream ofs(feats_drop_file, std::ios::out | std::ios::binary);
+    //output serialization
+    for(int i = 0; i < size; i++) {
+        ofs.write((char*)&feats[i], sizeof(float));
+    }
+    ofs.close();
 }
 
 template class graph_conv_layer<GCN_Aggregator>;

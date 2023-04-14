@@ -7,6 +7,12 @@
 #include "cutils.h"
 #endif
 
+#ifdef VORTEX
+#include "cl_utils.h"
+#include "cl_math_functions.h"
+#endif
+
+
 template <typename gconv_layer>
 void Model<gconv_layer>::load_data(GNNTrainingParser *p){
     //embedding the parser
@@ -34,6 +40,11 @@ void Model<gconv_layer>::load_data(GNNTrainingParser *p){
 #ifdef ENABLE_GPU
   use_gpu = true;
 #endif
+
+#ifdef VORTEX
+  use_vortex = true;
+#endif
+
   full_graph = new Graph(use_gpu);
   auto reader = new Reader(dataset_name);
   reader->set_dataset();
@@ -118,6 +129,9 @@ void Model<gconv_layer>::load_data(GNNTrainingParser *p){
     }
     subg_masks = new mask_t[num_samples * num_subgraphs];
   }
+
+  //---------------------Allocate memory on devices---------------------
+  //-----GPU-----
   if (use_gpu) {
     if (subg_size > 0) {
       float_malloc_device(subg_size*dim_init, d_feats_subg);
@@ -130,6 +144,21 @@ void Model<gconv_layer>::load_data(GNNTrainingParser *p){
       training_graph->copy_to_gpu();
     }
   }
+  //-----VORTEX-----
+  if(use_vortex) {
+    if (subg_size > 0) {
+      std::cout << "Vortex does not support subgraph sampling" << std::endl;
+      exit(1);
+    } else {
+      clInit();
+      training_graph->compute_vertex_data();
+      training_graph->compute_edge_data();
+      transfer_data_to_vortex();
+      training_graph->alloc_on_device();
+      training_graph->copy_to_gpu();
+    }
+  }
+
   if (subg_size == 0 || !use_gpu) {
 #if (defined(USE_MKL) && defined(PRECOMPUTE_SCORES)) || (defined(ENABLE_GPU) && defined(USE_CUSPARSE))
     if (inductive) training_graph->compute_edge_data();
@@ -161,6 +190,13 @@ void Model<gconv_layer>::transfer_data_to_device() {
   copy_uint8_device(num_samples, &masks_test[0], d_masks_test);
   uint8_malloc_device(num_samples, d_masks_val);
   copy_uint8_device(num_samples, &masks_val[0], d_masks_val);
+}
+
+template <typename gconv_layer>
+void Model<gconv_layer>::transfer_data_to_vortex() {
+  std::cout << "transfer features to Vortex\n";
+  std::cout << "Not implemented yet" << std::endl;
+  exit(1);
 }
 
 template <typename gconv_layer>
@@ -294,6 +330,23 @@ void Model<gconv_layer>::subgraph_sampling(int curEpoch, int &num_subg_remain) {
 }
 
 template <typename gconv_layer>
+void Model<gconv_layer>::infer() {
+  std::cout << "Start inference..." << std::endl;
+  for (int l = 0; l < num_layers-1; l++)
+    layer_gconv[l].forward(layer_gconv[l+1].get_feat_in());
+  if (use_dense) {
+    if (use_l2norm) {
+      layer_gconv[num_layers-1].forward(layer_l2norm->get_feat_in());
+      layer_l2norm->forward(layer_dense->get_feat_in());
+    } else 
+      layer_gconv[num_layers-1].forward(layer_dense->get_feat_in());
+    layer_dense->forward(layer_loss->get_feat_in());
+  } else {
+    layer_gconv[num_layers-1].forward(layer_loss->get_feat_in());
+  }
+}
+
+template <typename gconv_layer>
 void Model<gconv_layer>::train() {
   optimizer* opt = new adam(lrate);
   std::cout << "Start training...\n";
@@ -369,7 +422,7 @@ void Model<gconv_layer>::construct_network() {
   layer_gconv.push_back(gconv_layer(num_layers-1, nv, dim_hid, dim_out, training_graph, false, lrate, feat_drop, score_drop));
   if (use_l2norm) layer_l2norm = new l2norm_layer(nv, dim_hid);
   if (use_dense) layer_dense = new dense_layer(nv, dim_hid, num_cls, lrate);
-#ifdef ENABLE_GPU
+#ifdef ENABLE_GPU || VORTEX
     layer_gconv[0].set_feat_in(d_input_features);
 #else
     layer_gconv[0].set_feat_in(&input_features[0]);
@@ -386,28 +439,12 @@ void Model<gconv_layer>::construct_network() {
   //print_layers_info();
 }
 
-// inference phase - used also in the forward_pass() function
-template <typename gconv_layer>
-void Model<gconv_layer>::infer() {
-  std::cout << "Start inference..." << std::endl;
-  for (int l = 0; l < num_layers-1; l++)
-    layer_gconv[l].forward(layer_gconv[l+1].get_feat_in());
-  if (use_dense) {
-    if (use_l2norm) {
-      layer_gconv[num_layers-1].forward(layer_l2norm->get_feat_in());
-      layer_l2norm->forward(layer_dense->get_feat_in());
-    } else 
-      layer_gconv[num_layers-1].forward(layer_dense->get_feat_in());
-    layer_dense->forward(layer_loss->get_feat_in());
-  } else {
-    layer_gconv[num_layers-1].forward(layer_loss->get_feat_in());
-  }
-}
-
 // forward pass in training phase
 template <typename gconv_layer>
 acc_t Model<gconv_layer>::forward_prop(acc_t& loss) {
+  // forward pass
   infer();
+
   mask_t* masks_ptr = &masks_train[0];
   label_t* labels_ptr = &labels[0];
 #ifdef ENABLE_GPU

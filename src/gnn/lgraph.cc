@@ -2,6 +2,10 @@
 #include "math_functions.hh"
 #include "cl_utils.h"
 
+/*
+NOTE: This file reimplments the function defined in lgraph.cpp to use OpenCL
+*/
+
 void LearningGraph::alloc_on_device() {
   if (d_rowptr_ && gpu_vsize < num_vertices_) clFree((cl_mem) d_rowptr_);
   if (d_rowptr_ == NULL) {

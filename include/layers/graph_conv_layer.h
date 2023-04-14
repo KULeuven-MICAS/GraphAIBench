@@ -1,4 +1,7 @@
 #pragma once
+#include <iostream>
+#include <string>
+
 #include "lgraph.h"
 #include "optimizer.h"
 #include "aggregator.h"
@@ -7,7 +10,7 @@ template <typename Aggregator>
 class graph_conv_layer {
   public:
     graph_conv_layer(int id, int nv, int din, int dout, Graph *g, bool act,
-                     bool concat, float lr, float feat_drop, float score_drop);
+                     bool concat, float lr, float feat_drop, float score_drop, std::string feats_drop_file = "");
     float* get_feat_in() { return feat_in; }
     float* get_grad_in() { return grad_in; }
     void set_feat_in(float* ptr) { feat_in = ptr; }
@@ -18,7 +21,8 @@ class graph_conv_layer {
                 << " samples, dims: [" << dim_in << " x " << dim_out << "]\n";
     }
     void update_dim_size(size_t sz); // update number of vertices; useful for subgraph sampling
-
+    void dump_feats_to_file(float *feats, int size);
+    
   protected:
     int level_;
     int num_samples;              // number of vertices
@@ -28,6 +32,7 @@ class graph_conv_layer {
     bool is_act;                  // whether to use activation function at the end
     bool is_bias;                 // whether to add bias before relu
     bool use_concat;              // concat self and neighbors' features
+    std::string feats_drop_file;              // whether to store features in a file or not
     float feat_dropout_rate;      // dropout rate for features
     float score_dropout_rate;     // dropout rate for scores
     float feat_scale;             // scale rate used for feature dropout
@@ -61,8 +66,8 @@ class graph_conv_layer {
 class GCN_layer : public graph_conv_layer<GCN_Aggregator> {
   public:
     GCN_layer(int id, int nv, int din, int dout, Graph *g, bool act, 
-              float lr, float feat_drop_rate, float score_drop_rate) :
-              graph_conv_layer(id, nv, din, dout, g, act, false, lr, feat_drop_rate, score_drop_rate) {
+              float lr, float feat_drop_rate, float score_drop_rate, std::string feats_drop_file = "") :
+              graph_conv_layer(id, nv, din, dout, g, act, false, lr, feat_drop_rate, score_drop_rate, feats_drop_file) {
       if (dim_in < dim_out) aggr.init(dim_in, nv);
       else aggr.init(dim_out, nv);
     }

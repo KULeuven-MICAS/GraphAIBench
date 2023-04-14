@@ -28,6 +28,7 @@ void GCN_layer::forward(float* feat_out) {
   }
   if (is_bias) bias_mv(x, z, feat_out, &bias[0]);
   if (is_act) relu_cpu(x*z, feat_out, feat_out);
+  if (feats_drop_file!="") dump_feats_to_file(feat_out, x*z);
 }
 
 // Assume before calling backward, grad_in has already been filled in. 

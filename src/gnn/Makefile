@@ -6,7 +6,7 @@ NVCC=nvcc
 IDIR=../../include/gnn
 ODIR=./obj
 CULIBS=-lcudart -lcublas -lcusparse -lcurand
-CFLAGS=$(INCLUDES) -fopenmp -pthread -Wall --std=c++11 -lboost_thread -lboost_system -fsanitize=address
+CFLAGS=$(INCLUDES) -fopenmp -pthread -Wall --std=c++11 -lboost_thread -lboost_system #-fsanitize=address
 INCLUDES=-I$(CUDA_HOME)/include -I${OPENBLAS_DIR}/include -I../../include -I../../include/gnn -I../../include/layers -I../../include/utils
 CUFLAGS=$(INCLUDES) -DENABLE_GPU $(CULIBS) -lboost_thread -lboost_system
 

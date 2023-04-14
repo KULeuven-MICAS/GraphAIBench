@@ -13,6 +13,7 @@ class Model {
     Model(int epochs, int nl, int nv, int nt, int nc, int di, int dh, float lr, Graph *g, std::string data, bool multi) :
         num_epochs(epochs), num_layers(nl), num_samples(nv), num_threads(nt), num_cls(nc), 
         dim_init(di), dim_hid(dh), lrate(lr), full_graph(g), dataset_name(data), is_sigmoid(multi) {}
+    void infer();
     acc_t forward_prop(acc_t& loss);
     acc_t evaluate(std::string type);
     void backward_prop();
