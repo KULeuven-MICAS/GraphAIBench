@@ -364,6 +364,9 @@ void optimizeWorkDimentions(int work_dim, int* work_groups_dim, struct oclKernel
   }
   #ifdef VORTEX
     int hw_virtual_threads_count = NUM_THREADS*NUM_WARPS*NUM_CORES;
+    std::cout << "------>[RUNTIME-INFO] NUM_THREADS: " << NUM_THREADS << std::endl;
+    std::cout << "------>[RUNTIME-INFO] NUM_WARPS: " << NUM_WARPS << std::endl;
+    std::cout << "------>[RUNTIME-INFO] NUM_CORES: " << NUM_CORES << std::endl;
     std::cout << "------>[RUNTIME-INFO] HW capabilities: " << hw_virtual_threads_count << std::endl;
     int total_work_items = 1;
     for (int i = 0; i < work_dim; i++) {
