@@ -362,9 +362,10 @@ void optimizeWorkDimentions(int work_dim, int* work_groups_dim, struct oclKernel
     work_groups.global_work_size[i] = work_groups_dim[i];
     work_groups.local_work_size[i] = 1; //1 will always grant full HW utilization, but not optimal execution time!
   }
-  #ifdef VORTEX
-    int hw_virtual_threads_count = NUM_THREADS*NUM_WARPS*NUM_CORES;
+  #ifdef VORTEX_RUNTIME
+    int hw_virtual_threads_count = NUM_THREADS*NUM_WARPS*NUM_CORES*NUM_CLUSTERS;
     std::cout << "------>[RUNTIME-INFO] NUM_THREADS: " << NUM_THREADS << std::endl;
+    std::cout << "------>[RUNTIME-INFO] NUM_CLUSTERS: " << NUM_CLUSTERS << std::endl;
     std::cout << "------>[RUNTIME-INFO] NUM_WARPS: " << NUM_WARPS << std::endl;
     std::cout << "------>[RUNTIME-INFO] NUM_CORES: " << NUM_CORES << std::endl;
     std::cout << "------>[RUNTIME-INFO] HW capabilities: " << hw_virtual_threads_count << std::endl;
