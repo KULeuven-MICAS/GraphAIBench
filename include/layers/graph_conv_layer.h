@@ -79,8 +79,8 @@ class GCN_layer : public graph_conv_layer<GCN_Aggregator> {
 class SAGE_layer : public graph_conv_layer<SAGE_Aggregator> {
   public:
     SAGE_layer(int id, int nv, int din, int dout, Graph *g, bool act, 
-               float lr, float feat_drop_rate, float score_drop_rate) :
-               graph_conv_layer(id, nv, din, dout, g, act, true, lr, feat_drop_rate, score_drop_rate) {
+               float lr, float feat_drop_rate, float score_drop_rate, std::string feats_drop_file = "") :
+               graph_conv_layer(id, nv, din, dout, g, act, true, lr, feat_drop_rate, score_drop_rate, feats_drop_file) {
       if (dim_in < dim_out) aggr.init(dim_in, nv);
       else aggr.init(dim_out, nv);
     }
@@ -92,8 +92,8 @@ class SAGE_layer : public graph_conv_layer<SAGE_Aggregator> {
 class GAT_layer : public graph_conv_layer<GAT_Aggregator> {
   public:
     GAT_layer(int id, int nv, int din, int dout, Graph *g, bool act,
-              float lr, float feat_drop_rate, float score_drop_rate) :
-              graph_conv_layer(id, nv, din, dout, g, act, false, lr, feat_drop_rate, score_drop_rate) {
+              float lr, float feat_drop_rate, float score_drop_rate, std::string feats_drop_file = "") :
+              graph_conv_layer(id, nv, din, dout, g, act, false, lr, feat_drop_rate, score_drop_rate, feats_drop_file) {
       aggr.init(dim_out, nv, g->sizeEdges(), lr, score_drop_rate);
     }
     void forward(float* feat_out);

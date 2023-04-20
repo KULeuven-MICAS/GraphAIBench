@@ -356,17 +356,26 @@ void Model<gconv_layer>::train() {
 }
 
 template <typename gconv_layer>
+std::string Model<gconv_layer>::make_layer_filename(int n){
+  if (feats_drop_path.empty()) return "";
+  std::string filename = feats_drop_path + "features_";
+  filename += std::to_string(n);
+  filename += ".dat";
+  return filename;
+}
+
+template <typename gconv_layer>
 void Model<gconv_layer>::construct_network() {
   std::cout << "constructing neural network...\n";
   auto nv = num_samples;
   if (subg_size > 0 && use_gpu) nv = subg_size; // save memory for GPU
   for (int l = 0; l < num_layers-1; l++) {
     int dim_in = (l == 0) ? dim_init : dim_hid;
-    layer_gconv.push_back(gconv_layer(l, nv, dim_in, dim_hid, training_graph, true, lrate, feat_drop, score_drop));
+    layer_gconv.push_back(gconv_layer(l, nv, dim_in, dim_hid, training_graph, true, lrate, feat_drop, score_drop, make_layer_filename(l)));
   }
   int dim_out = num_cls;
   if (use_dense) dim_out = dim_hid;
-  layer_gconv.push_back(gconv_layer(num_layers-1, nv, dim_hid, dim_out, training_graph, false, lrate, feat_drop, score_drop));
+  layer_gconv.push_back(gconv_layer(num_layers-1, nv, dim_hid, dim_out, training_graph, false, lrate, feat_drop, score_drop, make_layer_filename(num_layers-1)));
   if (use_l2norm) layer_l2norm = new l2norm_layer(nv, dim_hid);
   if (use_dense) layer_dense = new dense_layer(nv, dim_hid, num_cls, lrate);
 #ifdef ENABLE_GPU

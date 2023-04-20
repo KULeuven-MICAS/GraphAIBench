@@ -40,3 +40,4 @@ cpu_train_*
 train_*
 
 **/datasets/
+**/outputs/

@@ -6,18 +6,31 @@
 #include "sampler.h"
 #include "parser.h"
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 template <typename gconv_layer>
 class Model {
   public:
-    Model() { Model(0, 0, 0, 0, 0, 0, 0, 0.0, NULL, "", 0); }
-    Model(int epochs, int nl, int nv, int nt, int nc, int di, int dh, float lr, Graph *g, std::string data, bool multi) :
+    Model() { Model(0, 0, 0, 0, 0, 0, 0, 0.0, NULL, "", 0, ""); }
+    Model(int epochs, int nl, int nv, int nt, int nc, int di, int dh, float lr, Graph *g, std::string data, bool multi, std::string feats_drop_path = "") :
         num_epochs(epochs), num_layers(nl), num_samples(nv), num_threads(nt), num_cls(nc), 
-        dim_init(di), dim_hid(dh), lrate(lr), full_graph(g), dataset_name(data), is_sigmoid(multi) {}
+        dim_init(di), dim_hid(dh), lrate(lr), full_graph(g), dataset_name(data), is_sigmoid(multi),
+        feats_drop_path(feats_drop_path) {
+          if ( !feats_drop_path.empty()) {
+            struct stat buffer;
+            if ( stat(feats_drop_path.c_str(), &buffer) != 0) {
+              std::cout << "Feature dropout path " << feats_drop_path << " does not exist." << std::endl;
+              exit(1);
+            }
+          }
+        }
     void infer();
     acc_t forward_prop(acc_t& loss);
     acc_t evaluate(std::string type);
     void backward_prop();
     void load_data(GNNTrainingParser *p);
+    std::string make_layer_filename(int n);
     void construct_network();
     void train();
     void update_weights(optimizer* opt);
@@ -29,6 +42,7 @@ class Model {
     void construct_subg_feats(size_t m, const mask_t* masks);
     void construct_subg_labels(size_t m, const mask_t* masks);
     Graph* get_subg_ptr(int id) { return subgs[id]; }
+    void set_feats_drop_path(std::string path) { feats_drop_path = path; }
   private:
     int num_epochs;   // number of epochs
     int num_layers;   // number of graph_conv layers
@@ -49,6 +63,7 @@ class Model {
     Graph* full_graph;         // original full graph
     Graph* training_graph;     // training graph: masked by training vertex set
     std::string dataset_name;  // dataset name: citeseer, cora, pubmed, reddit, etc
+    std::string feats_drop_path; // path to feature dropout file
     bool is_sigmoid;           // single-class (softmax) or multi-class (sigmoid)
     bool use_dense;            // add a Dense layer or not
     bool use_l2norm;           // add a L2norm layer or not

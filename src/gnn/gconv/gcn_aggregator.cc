@@ -2,19 +2,19 @@
 //#include "graph_operations.h" --> checkout what warp reduce does!
 #include "cl_utils.h"
 
+//not really useful... memory allocation is actually done only when fp is done in batches
 void GCN_Aggregator::init(int l, int nv, int ne, float lr, float drop_rate) {
-  length = l;
-  if (nv > n) {
-    if (temp) clFree((cl_mem)temp);
-    temp = clMallocRW(nv * l); // avoid repetitive allocation
-  }
+  //if (nv > n) {
+  //  if (temp) clFree((cl_mem)temp);
+  //  temp = (float*) clMallocRW(nv * l); // avoid repetitive allocation
+  //}
   n = nv;
+  length = l;
 }
 
 void GCN_Aggregator::aggregate(int len, Graph& g, const float* in, float* out) {
   unsigned n = g.size();
-  auto nnz = g.sizeEdges();
-  clSpmm(n, len, n, nnz, g.edge_data_ptr(), (int*)g.row_start_ptr(), (int*)g.edge_dst_ptr(), in, out, temp);
+  clAvgAggr(n, len, (cl_mem) g.edge_data_ptr(), (cl_mem) g.row_start_ptr(), (cl_mem) g.edge_dst_ptr(), (cl_mem) in, (cl_mem) out);
 }
 
 void GCN_Aggregator::d_aggregate(int len, Graph& g, const float*, const float* in, float* out) {
