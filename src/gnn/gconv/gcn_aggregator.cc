@@ -1,6 +1,7 @@
 #include "aggregator.h"
 //#include "graph_operations.h" --> checkout what warp reduce does!
 #include "cl_utils.h"
+#include "cl_math_functions.h"
 
 //not really useful... memory allocation is actually done only when fp is done in batches
 void GCN_Aggregator::init(int l, int nv, int ne, float lr, float drop_rate) {

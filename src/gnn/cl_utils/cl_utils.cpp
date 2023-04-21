@@ -11,9 +11,6 @@ struct oclHandleStruct oclHandles;
 int DEVICE_ID_INUSED = 0; // deviced id used (default : 0)
 cl_uint deviceListSize = 1;
 
-
-void clErrorHandle(cl_int status);
-
 //--create read only buffer for devices
 cl_mem clMallocRW(int size, void *h_mem_ptr) {
   cl_mem d_mem;
@@ -97,30 +94,6 @@ void clMemcpyD2H(cl_mem d_mem, int size, void *h_mem){
   clErrorHandle(oclHandles.cl_status);
 }
 
-template <typename T>
-void clInitConstMem(int size, T initValue, cl_mem d_mem_ptr){
-  oclHandles.cl_status = clEnqueueFillBuffer( oclHandles.queue,     // command_queue
-                                                d_mem_ptr,            // buffer
-                                                (void*) &initValue,   // pattern
-                                                sizeof(T),            // pattern_size
-                                                0,                    // offset
-                                                size,                 // size
-                                                0,                    // num_events_in_wait_list
-                                                NULL,                 // *event_wait_list
-                                                &(oclHandles.event)); // *event
-  cl_int cl_status = clWaitForEvents(1, &(oclHandles.event));
-  oclHandles.error_str = "exception in clInitConstMem() ->";
-  clErrorHandle(oclHandles.cl_status);
-}
-
-template<typename T>
-T random(T range_from, T range_to) {
-    std::random_device                  rand_dev;
-    std::mt19937                        generator(rand_dev());
-    std::uniform_real_distribution<T>    distr(range_from, range_to);
-    //can be also std::uniform_int_distribution<T>
-    return distr(generator);
-}
 void clInitRangeUniformMem(int size, const float_t a, const float_t b, cl_mem d_mem_ptr){
     float_t rn[size];
     for (int i = 0; i < size; i++) {

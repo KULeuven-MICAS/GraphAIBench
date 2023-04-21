@@ -1,4 +1,5 @@
-#include "cl_util.h"
+#include "cl_utils.h"
+#include "cl_math_functions.h"
 #include "aggregator.h"
 #include "graph_conv_layer.h"
 
@@ -15,11 +16,11 @@ void GCN_layer::forward(float* feat_out) {
   }
 
   if (y > z) {
-    clMatmul(x, z, y, (cl_mem) in_data, (cl_mem) d_W_neigh, (cl_mem) d_out_temp); // x*y; y*z; x*z
+    clMatmul(x, z, y, (cl_mem) in_data, (cl_mem) d_W_neigh, (cl_mem) d_out_temp, {NULL, NULL}); // x*y; y*z; x*z
     aggr.aggregate(z, *graph, d_out_temp, feat_out); // x*x; x*z; x*z
   } else {
     aggr.aggregate(y, *graph, in_data, d_in_temp1); // x*x; x*y; x*y
-    clMatmul(x, z, y, (cl_mem) d_in_temp1, (cl_mem) d_W_neigh, (cl_mem) feat_out); // x*y; y*z; x*z
+    clMatmul(x, z, y, (cl_mem) d_in_temp1, (cl_mem) d_W_neigh, (cl_mem) feat_out, {NULL, NULL}); // x*y; y*z; x*z
   }
   //if (is_bias) bias_mv(x, z, feat_out, d_bias);
   //if (is_act) relu_gpu(x*z, feat_out, feat_out);

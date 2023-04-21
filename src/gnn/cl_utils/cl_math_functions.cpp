@@ -6,7 +6,7 @@
 
 //Possible improvement: global work size can be detected automatically from inputs
 
-void clAvgAggr(size_t vnum, size_t vlen, const cl_mem A_nonzeros, const cl_mem A_idx_ptr, const cl_mem A_nnz_idx, const cl_mem B, cl_mem C, struct oclKernelParamStruct arg_work_groups = {NULL, NULL}){
+void clAvgAggr(size_t vnum, size_t vlen, const cl_mem A_nonzeros, const cl_mem A_idx_ptr, const cl_mem A_nnz_idx, const cl_mem B, cl_mem C, struct oclKernelParamStruct arg_work_groups /*= {NULL, NULL}*/){
     int work_dim = 2;
     std::string kernel_name = "aggr";
     std::string kernel_path = std::string(BIN_DIR) + "/kernels/aggr.pocl";
@@ -27,7 +27,7 @@ void clAvgAggr(size_t vnum, size_t vlen, const cl_mem A_nonzeros, const cl_mem A
     clInvokeKernel(kernel_name, work_dim, work_groups.global_work_size, work_groups.local_work_size);
 }
 
-void clMatmul(const size_t x, const size_t y, const size_t z, const cl_mem A, const cl_mem B, cl_mem C, struct oclKernelParamStruct arg_work_groups = {NULL, NULL}){
+void clMatmul(const size_t x, const size_t y, const size_t z, const cl_mem A, const cl_mem B, cl_mem C, struct oclKernelParamStruct arg_work_groups /*= {NULL, NULL}*/){
     int work_dim = 2;
     std::string kernel_name = "sgemm";
     std::string kernel_path = std::string(BIN_DIR) + "/kernels/sgemm.pocl";

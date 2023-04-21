@@ -36,8 +36,8 @@ int main (int argc, char *argv[]) {
     for (int i = 0; i < nv*din; i++) {
         feat_in[i] = float(rand()/RAND_MAX);
     }
-    clMemcpyH2D(gcn_layer.get_feat_in(), nv*din*sizeof(float), &feat_in[0]);
-    float *feat_out = (float) clMallocRW(nv*dout*sizeof(float));
+    clMemcpyH2D((cl_mem) gcn_layer.get_feat_in(), nv*din*sizeof(float), &feat_in[0]);
+    float *feat_out = (float*) clMallocRW(nv*dout*sizeof(float));
 #endif
 
     std::cout << "test forward" << std::endl;

@@ -1,9 +1,8 @@
-#Meglio riscrivere questa porcata.
-#Usa gcnSynth come esempio.
+XLEN ?= 32
 
-INCLUDES=-I../../../../include/utils -I../../../../include/gnn -I../../../../include -I../../../../include/layers
-CFLAGS= $(INCLUDES) -I$(OPENBLAS_DIR)/include -L$(OPENBLAS_DIR)/lib -fopenmp -pthread -Wall --std=c++11 -lboost_thread -lboost_system -lopenblas -fsanitize=address
-CFLAGs += -DVORTEX -DVORTEX_RUNTIME
+DEBUG ?= 0
+VORTEX ?= 0
+USE_GPU ?= 0
 
 LLVM_PREFIX ?= /opt/llvm-riscv
 RISCV_TOOLCHAIN_PATH ?= /opt/riscv-gnu-toolchain
@@ -12,34 +11,55 @@ SYSROOT ?= $(RISCV_TOOLCHAIN_PATH)/riscv32-unknown-elf
 POCL_CC_PATH ?= /opt/pocl/compiler
 POCL_RT_PATH ?= /opt/pocl/runtime
 
-VORTEX_DRV_PATH ?= $(realpath ../../../driver)# used only for run recipe
-VORTEX_RT_PATH ?= $(realpath ../../../runtime)# used only for kernel compilation
+VORTEX_DRV_PATH ?= $(realpath ../../../../../../../driver)# used only for run recipe
+VORTEX_RT_PATH ?= $(realpath ../../../../../../../runtime)# used only for kernel compilation
+GRAPHAI_ROOT ?= $(realpath ../../../../../GraphAIBanch/)
+DATASET_ROOT ?= $(realpath ../../../../../GraphAIBanch/datasets)
 
 POCL_KERNEL_LLCFLAGS += "-O3 -march=riscv32 -target-abi=ilp32f -mcpu=generic-rv32 -mattr=+m,+f -mattr=+vortex -float-abi=hard -code-model=small"
 POCL_KERNEL_CFLAGS   += "-v -O3 -Wstack-usage=1024 --sysroot=$(SYSROOT) --gcc-toolchain=$(RISCV_TOOLCHAIN_PATH) -march=rv32imf -mabi=ilp32f -Xclang -target-feature -Xclang +vortex -I$(VORTEX_RT_PATH)/include -fno-rtti -fno-exceptions -ffreestanding -nostartfiles -fdata-sections -ffunction-sections"
-POCL_KERNEL_LDFLAGS  += "-Wl,-Bstatic,-T$(VORTEX_RT_PATH)/linker/vx_link$(XLEN).ld -Wl,--gc-sections $(VORTEX_RT_PATH)/libvortexrt.a -lm"
+POCL_KERNEL_LDFLAGS += "-Wl,-Bstatic,-T$(VORTEX_RT_PATH)/linker/vx_link$(XLEN).ld -Wl,--gc-sections $(VORTEX_RT_PATH)/libvortexrt.a -lm"
 
 VORTEX_LDFLAGS += -L$(POCL_RT_PATH)/lib -L$(VORTEX_DRV_PATH)/stub -lOpenCL -lvortex
 VORTEX_CXXFLAGS += -I$(POCL_RT_PATH)/include
 
-VPATH += ../../../common
-VPATH += ../../../utilities
-VPATH += ../../../layers
-VPATH += ../../gconv
-VPATH += ../../
+CXX=g++
+NVCC=nvcc
+IDIR=$(GRAPHAI_ROOT)/include
+HWIDIR=../../../../../../../hw/
+INCLUDES=-I$(IDIR)/utils -I$(IDIR)/gnn -I$(IDIR)/layers -I$(IDIR) -I$(HWIDIR)
+CFLAGS=$(INCLUDES) -fopenmp -pthread -Wall --std=c++11 -lboost_thread -lboost_system -DERRMSG  #-fsanitize=address 
+CFLAGS += -DVORTEX -DVORTEX_RUNTIME -DDATASET_ROOT=\"$(DATASET_ROOT)\"
+CFLAGS += $(CONFIGS)
 
-COMMON_CXXOBJS = random.c.o
+ifdef SANITIZE
+CFLAGS += -fsanitize=address
+endif
+
+VPATH += $(GRAPHAI_ROOT)/src/gnn/cl_utils 		#for cl_utils.cpp and cl_math_functions.cpp
+VPATH += $(GRAPHAI_ROOT)/src/gnn/				#for graph_conv_layer.cpp net.cpp etc
+VPATH += $(GRAPHAI_ROOT)/src/gnn/gconv			#for gcn_layer.cpp etc
+VPATH += $(GRAPHAI_ROOT)/src/utilities			#for optimizer.cpp and random.cpp
+VPATH += $(GRAPHAI_ROOT)/src/layers
+
+CFLAGS += $(VORTEX_LDFLAGS)
+CFLAGS += $(VORTEX_CXXFLAGS)
+
+#--------------------------------OBJECTS--------------------------------
+COMMON_CXXOBJS = random.c.o cl_utils.c.o cl_math_functions.c.o
 UTIL_CXXOBJS = optimizer.c.o
 
-COMMON_CXXOBJS_VX = graph_conv_layer.vx.o lgraph.vx.o
+COMMON_CXXOBJS_VX = graph_conv_layer.vx.o lgraph.vx.o 
 GNN_LAYER_CXXOBJS_VX = gcn_layer.vx.o gcn_aggregator.vx.o
-
 
 ODIR=./obj
 OBJS = $(COMMON_CXXOBJS) $(UTIL_CXXOBJS)
 OBJS_VX = $(GNN_LAYER_CXXOBJS_VX) $(COMMON_CXXOBJS_VX)
+
 OBJ = $(patsubst %,$(ODIR)/%,$(OBJS))
 OBJ_VX = $(patsubst %,$(ODIR)/%,$(OBJS_VX))
+
+#--------------------------------KERNELS--------------------------------
 
 BIN_DIR=./bin
 KBIN_DIR=./bin/kernels
@@ -47,8 +67,16 @@ KBIN_DIR=./bin/kernels
 KSRC_DIR=$(GRAPHAI_ROOT)/src/gnn/cl_kernels
 
 KERNELS = $(KBIN_DIR)/aggr.pocl $(KBIN_DIR)/sgemm.pocl
+PROJECT = $(BIN_DIR)/prova
 
-all: prova $(OBJ) $(OBJ_VX)
+
+#--------------------------------TEMPLATES------------------------------
+
+TEMPLATES= $(IDIR)/utils/cl_utils.h
+
+#--------------------------------RECIPES--------------------------------
+
+all: $(PROJECT) $(KERNELS)
 
 $(ODIR)/%.vx.o: %.cc
 	@mkdir -p $(@D)
@@ -58,6 +86,17 @@ $(ODIR)/%.c.o: %.cpp
 	@mkdir -p $(@D)
 	$(CXX) -c -o $@ $< $(CFLAGS)
 
+$(PROJECT): main.cpp $(OBJ) $(OBJ_VX) $(TEMPLATES)
+	@mkdir -p $(@D)
+	$(CXX) -o $@ $^ $(CFLAGS)
+
 $(KBIN_DIR)/%.pocl: $(KSRC_DIR)/%.cl
 	@mkdir -p $(KBIN_DIR)
 	LLVM_PREFIX=$(LLVM_PREFIX) POCL_DEBUG=all LD_LIBRARY_PATH=$(LLVM_PREFIX)/lib:$(POCL_CC_PATH)/lib $(POCL_CC_PATH)/bin/poclcc -LLCFLAGS $(POCL_KERNEL_LLCFLAGS) -CFLAGS $(POCL_KERNEL_CFLAGS) -LDFLAGS $(POCL_KERNEL_LDFLAGS) -o $@ $<
+
+run-simx: $(PROJECT) $(KERNELS) 
+	LD_LIBRARY_PATH=$(POCL_RT_PATH)/lib:$(VORTEX_DRV_PATH)/simx:$(LD_LIBRARY_PATH) $(PROJECT) $(OPTS)
+
+.PHONY: clean
+clean:
+	rm -rf $(ODIR)/*.o  $(BIN_DIR)/*
