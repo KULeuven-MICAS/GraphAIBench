@@ -81,8 +81,11 @@ cl_mem clReallocRW(cl_mem ob, int size, void *h_mem_ptr){
 
 //--transfer data from host to device
 void clMemcpyH2D(cl_mem d_mem, int size, const void *h_mem_ptr){
-  oclHandles.cl_status = clEnqueueWriteBuffer( oclHandles.queue, d_mem, CL_TRUE, 
-                                                 0, size, h_mem_ptr, 0, NULL, NULL);
+  oclHandles.cl_status = clEnqueueWriteBuffer(  oclHandles.queue, //command queue
+                                                d_mem, CL_TRUE,   //buffer, blocking_read
+                                                0, size,          //offset, size (cb)
+                                                h_mem_ptr, 0,     //host ptr, num_events_in_wait_list
+                                                NULL, NULL);      //event_wait_list, event
   oclHandles.error_str = "exception in clMemcpyH2D() ->";
   clErrorHandle(oclHandles.cl_status);
 }
@@ -94,13 +97,12 @@ void clMemcpyD2H(cl_mem d_mem, int size, void *h_mem){
   clErrorHandle(oclHandles.cl_status);
 }
 
-void clInitRangeUniformMem(int size, const float_t a, const float_t b, cl_mem d_mem_ptr){
-    float_t rn[size];
+void clInitRangeUniformMem(int size, const float a, const float b, cl_mem d_mem_ptr){
+    float rn_array[size];
     for (int i = 0; i < size; i++) {
-      	rn[i] = random<float>(a, b);
+      	rn_array[i] = random<float>(a, b);
     }
-    clMemcpyH2D(d_mem_ptr, size * sizeof(float_t), rn);
-    free(rn);
+    clMemcpyH2D(d_mem_ptr, size * sizeof(float), (void*) rn_array);
 }
 
 int read_kernel_file(const char* filename, uint8_t** data, size_t* size) {

@@ -1,4 +1,4 @@
-#include "cl_utils.h"
+//#include "cl_utils.h"
 #include "cl_math_functions.h"
 #include "aggregator.h"
 #include "graph_conv_layer.h"
@@ -15,6 +15,7 @@ void GCN_layer::forward(float* feat_out) {
     std::cout << "Warning. LAYER:" << level_ << "feature dropout not supported." << std::endl;
   }
 
+  std::cout << "LAYER:" << level_ << " nv:" << x << " C:" << y << " K:" << z << std::endl;
   if (y > z) {
     clMatmul(x, z, y, (cl_mem) in_data, (cl_mem) d_W_neigh, (cl_mem) d_out_temp, {NULL, NULL}); // x*y; y*z; x*z
     aggr.aggregate(z, *graph, d_out_temp, feat_out); // x*x; x*z; x*z

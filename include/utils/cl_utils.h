@@ -56,18 +56,11 @@ void clErrorHandle(cl_int status);
 
 template<typename T>
 void clInitConstMem(int size, T initValue, cl_mem d_mem_ptr){
-  oclHandles.cl_status = clEnqueueFillBuffer( oclHandles.queue,     // command_queue
-                                                d_mem_ptr,            // buffer
-                                                (void*) &initValue,   // pattern
-                                                sizeof(T),            // pattern_size
-                                                0,                    // offset
-                                                size,                 // size
-                                                0,                    // num_events_in_wait_list
-                                                NULL,                 // *event_wait_list
-                                                &(oclHandles.event)); // *event
-  cl_int cl_status = clWaitForEvents(1, &(oclHandles.event));
-  oclHandles.error_str = "exception in clInitConstMem() ->";
-  clErrorHandle(oclHandles.cl_status);
+  float array[size];
+  for(int i = 0; i < size; i++){
+    array[i] = initValue;
+  }
+  clMemcpyH2D(d_mem_ptr, size * sizeof(T), (void*) array);
 }
 
 template<typename T>

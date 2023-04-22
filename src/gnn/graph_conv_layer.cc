@@ -11,25 +11,25 @@ graph_conv_layer<Aggregator>::graph_conv_layer(int id, int nv, int din, int dout
     auto y = dim_in;
     auto z = dim_out;
 
-    d_W_neigh = (float*) clMallocRW(y * z);
+    d_W_neigh = (float*) clMallocRW((y*z)*sizeof(float));
     auto init_range = sqrt(6.0 / (y + z));
-    clInitRangeUniformMem(y + z, -init_range, init_range, (cl_mem) d_W_neigh);
+    clInitRangeUniformMem(y*z, -init_range, init_range, (cl_mem) d_W_neigh);
 
-    d_in_temp = (float*) clMallocRW(x * y);
-    d_out_temp = (float*) clMallocRW(x * z);
-    clInitConstMem<float>(x * y, 0.0, (cl_mem) d_in_temp);
-    clInitConstMem<float>(x * z, 0.0, (cl_mem) d_out_temp);
+    d_in_temp = (float*) clMallocRW((x*y)*sizeof(float));
+    d_out_temp = (float*) clMallocRW((x*z)*sizeof(float));
+    clInitConstMem<float>((y*x), 0.0, (cl_mem) d_in_temp);
+    clInitConstMem<float>((z*x), 0.0, (cl_mem) d_out_temp);
     if (y <= z){
-        d_in_temp1 = (float*) clMallocRW(x * y);
-        clInitConstMem<float>(x * y, 0.0, (cl_mem) d_in_temp1);
+        d_in_temp1 = (float*) clMallocRW((x*y)*sizeof(float));
+        clInitConstMem<float>((y*x), 0.0, (cl_mem) d_in_temp1);
     }
     if (level_ > 0) {
-        feat_in = (float*) clMallocRW(x * y);
-        clInitConstMem<float>(x * y, 0.0, (cl_mem) feat_in);
+        feat_in = (float*) clMallocRW((y*x)*sizeof(float));
+        clInitConstMem<float>((y*x), 0.0, (cl_mem) feat_in);
     }
 
     if (is_bias) {
-    d_bias = (float*) clMallocRW(z);
+    d_bias = (float*) clMallocRW(z*sizeof(float));
     clInitConstMem<float>(z, 0.0, (cl_mem) d_bias);
     }
 }
@@ -39,17 +39,17 @@ void graph_conv_layer<Aggregator>::update_dim_size(size_t x) {
     if (x > num_samples) {
         auto y = dim_in;
         auto z = dim_out;
-        d_in_temp = (float*) clReallocRW( (cl_mem) d_in_temp, x * y);
-        d_out_temp = (float*) clReallocRW(  (cl_mem) d_out_temp, x * z);
-        clInitConstMem<float>(x * y, 0.0, (cl_mem) d_in_temp);
-        clInitConstMem<float>(x * z, 0.0, (cl_mem) d_out_temp);
+        d_in_temp = (float*) clReallocRW( (cl_mem) d_in_temp, (y*x)*sizeof(float));
+        d_out_temp = (float*) clReallocRW(  (cl_mem) d_out_temp, (x*z)*sizeof(float));
+        clInitConstMem<float>((y*x), 0.0, (cl_mem) d_in_temp);
+        clInitConstMem<float>((z*x), 0.0, (cl_mem) d_out_temp);
         if (y <= z){
-            d_in_temp1 = (float*) clReallocRW( (cl_mem) d_in_temp1, x * y);
-            clInitConstMem<float>(x * y, 0.0, (cl_mem) d_in_temp1);
+            d_in_temp1 = (float*) clReallocRW( (cl_mem) d_in_temp1, (y*x)*sizeof(float));
+            clInitConstMem<float>((x*y), 0.0, (cl_mem) d_in_temp1);
         }
         if (level_ > 0) {
-            feat_in = (float*) clReallocRW( (cl_mem) feat_in, x * y);
-            clInitConstMem<float>(x * y, 0.0, (cl_mem) feat_in);
+            feat_in = (float*) clReallocRW( (cl_mem) feat_in, (y*x)*sizeof(float));
+            clInitConstMem<float>((x*y), 0.0, (cl_mem) feat_in);
         }
     }
 }

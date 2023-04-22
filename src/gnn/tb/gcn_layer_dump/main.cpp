@@ -22,8 +22,11 @@ int main (int argc, char *argv[]) {
     float feat_drop = 0.1;
     float score_drop = 0.1;
     std::string feats_drop_file = "test.dat";
-
     std::cout << "test init" << std::endl;
+
+#ifdef VORTEX
+    clInit();
+#endif    
     GCN_layer gcn_layer(id, nv, din, dout, g, act, lr, feat_drop, score_drop, feats_drop_file);
 #ifndef VORTEX
     float *feat_out = new float[nv*dout];
@@ -36,6 +39,7 @@ int main (int argc, char *argv[]) {
     for (int i = 0; i < nv*din; i++) {
         feat_in[i] = float(rand()/RAND_MAX);
     }
+    std::cout << "Copying inputs..." << std::endl;
     clMemcpyH2D((cl_mem) gcn_layer.get_feat_in(), nv*din*sizeof(float), &feat_in[0]);
     float *feat_out = (float*) clMallocRW(nv*dout*sizeof(float));
 #endif
