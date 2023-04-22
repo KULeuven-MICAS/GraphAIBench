@@ -17,6 +17,7 @@ int main (int argc, char *argv[]) {
     int din = 5;
     int dout = 10;
     Graph *g = new Graph();
+    //TODO add initialization of the graph
     bool act = false;
     float lr = 0.1;
     float feat_drop = 0.1;
