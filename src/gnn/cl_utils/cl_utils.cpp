@@ -329,6 +329,7 @@ int genTotalWorkGroups(int work_dim, size_t* l_work_size){
 
 void optimizeWorkDimentions(int work_dim, int* work_groups_dim, struct oclKernelParamStruct &work_groups){
   if (work_groups.global_work_size != NULL){
+    make_global_work_group_even(work_dim, work_groups.global_work_size, work_groups.local_work_size);
     return;
   }
   work_groups.global_work_size = (size_t*)malloc(work_dim * sizeof(size_t));
@@ -343,18 +344,18 @@ void optimizeWorkDimentions(int work_dim, int* work_groups_dim, struct oclKernel
     std::cout << "------>[RUNTIME-INFO] NUM_CLUSTERS: " << NUM_CLUSTERS << std::endl;
     std::cout << "------>[RUNTIME-INFO] NUM_WARPS: " << NUM_WARPS << std::endl;
     std::cout << "------>[RUNTIME-INFO] NUM_CORES: " << NUM_CORES << std::endl;
-    std::cout << "------>[RUNTIME-INFO] HW capabilities: " << hw_virtual_threads_count << std::endl;
+    std::cout << "------>[RUNTIME-INFO] HW resources: " << hw_virtual_threads_count << std::endl;
     int total_work_items = 1;
     for (int i = 0; i < work_dim; i++) {
       total_work_items *= work_groups.global_work_size[i];
     }
     if (total_work_items < hw_virtual_threads_count) {
-      std::cout << "WARNING: total_work_size is smaller than HW capabilities! The execution will be highly inefficient..." << std::endl;
+      std::cout << "WARNING: total_work_size is smaller than HW resources! The execution will be highly inefficient..." << std::endl;
     }
     int local_work_size = 1;
     for (int i = 0; i < work_dim; i++) { //each loop find the optimum for one local work dimention
       if (work_groups.global_work_size[i]<hw_virtual_threads_count)
-        std::cout << "WARNING: global_work_size[" << i << "] is smaller than HW capabilities!" << std::endl;
+        std::cout << "WARNING: global_work_size[" << i << "] is smaller than HW resources!" << std::endl;
       local_work_size = work_groups.global_work_size[i]/hw_virtual_threads_count;
       work_groups.local_work_size[i] = local_work_size ? local_work_size : 1;
     }
