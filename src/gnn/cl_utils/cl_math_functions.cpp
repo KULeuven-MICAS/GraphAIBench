@@ -27,10 +27,14 @@ void clAvgAggr(size_t vnum, size_t vlen, const cl_mem A_nonzeros, const cl_mem A
     clInvokeKernel(kernel_name, work_dim, work_groups.global_work_size, work_groups.local_work_size);
 }
 
-void clMatmul(const size_t x, const size_t y, const size_t z, const cl_mem A, const cl_mem B, cl_mem C, struct oclKernelParamStruct arg_work_groups /*= {NULL, NULL}*/){
+void clMatmul(const size_t x, const size_t y, const size_t z, const cl_mem A, const cl_mem B, cl_mem C, struct oclKernelParamStruct arg_work_groups /*= {NULL, NULL}*/, std::string dtype /*= "float"*/){
     int work_dim = 2;
-    std::string kernel_name = "sgemm";
-    std::string kernel_path = std::string(BIN_DIR) + "/kernels/sgemm.pocl";
+    std::string kernel_name;
+    if(dtype == "float") kernel_name = "sgemm";
+    else if(dtype == "int") kernel_name = "igemm";
+    else throw std::invalid_argument("Invalid data type");
+
+    std::string kernel_path = std::string(BIN_DIR) + "/kernels/" + kernel_name + ".pocl";
     struct oclKernelParamStruct work_groups = arg_work_groups;
 
     std::cout << "Loading program sgemm: " << kernel_path <<std::endl;

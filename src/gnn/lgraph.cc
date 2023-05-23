@@ -38,7 +38,7 @@ void LearningGraph::copy_to_gpu() {
   
   clMemcpyH2D((cl_mem) d_rowptr_, (num_vertices_+1)*sizeof(index_t), (void*) row_start_host_ptr());
   clMemcpyH2D((cl_mem) d_colidx_, num_edges_*sizeof(index_t), (void*) edge_dst_host_ptr());
-  clMemcpyH2D((cl_mem) d_edge_data_, num_edges_*sizeof(edata_t), (void*) edge_data_);
+  clMemcpyH2D((cl_mem) d_edge_data_, num_edges_*sizeof(edata_t), (void*) edge_data_host_ptr());
 }
 
 void LearningGraph::compute_edge_data() {
