@@ -9,12 +9,12 @@ __kernel void sgemm (int x,
   const int i = get_global_id(0); // Row ID
   const int j = get_global_id(1); // Col ID
 
-  if (i >= x || j >= y) return;
-    // Compute a single element (loop a K)
-    float acc = 0.0f;
-    for (int k = 0; k < z; k++) {
-      acc += A[i*z+k] * B[k*y+j];
-    }
-    // Store the result
-    C[i * y + j] = acc;
+  if ((i >= x) || (j >= y)) return;
+  // Compute a single element (loop a K)
+  float acc = 0.0f;
+  for (int k = 0; k < z; k++) {
+    acc += A[i*z+k] * B[k*y+j];
+  }
+  // Store the result
+  C[i * y + j] = acc;
 }

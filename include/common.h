@@ -64,7 +64,11 @@ typedef std::unordered_map<vlabel_t, int> nlf_map;
 #define MAX_THREADS (30 * 1024)
 #define WARPS_PER_BLOCK (BLOCK_SIZE / WARP_SIZE)
 #define MAX_BLOCKS (MAX_THREADS / BLOCK_SIZE)
+
+#ifndef NUM_WARPS
 #define NUM_WARPS (BLOCK_SIZE / WARP_SIZE)
+#endif
+
 #define BYTESTOMB(memory_cost) ((memory_cost)/(double)(1024 * 1024))
 
 // Vertex Coloring
