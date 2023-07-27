@@ -307,14 +307,14 @@ void clLoadProgram(const char* filename, std::string kernel_name) {
 }
 
 //--enqueue kernel execution
-void clInvokeKernel(std::string kernel_name, cl_uint work_dim, size_t* g_work_size, size_t* l_work_size){
+void clInvokeKernel(std::string kernel_name, cl_uint work_dim, size_t* g_work_size, size_t* l_work_size,  size_t* offset /*= NULL*/){
   auto kernel_id = std::find(oclHandles.kernel_ids.begin(), oclHandles.kernel_ids.end(), kernel_name);
   if (kernel_id == oclHandles.kernel_ids.end()) {
     std::cout << "Kernel " << kernel_name << " not loaded." << std::endl;
     return;
   }
   int index = kernel_id -oclHandles.kernel_ids.begin();
-  oclHandles.cl_status = clEnqueueNDRangeKernel( oclHandles.queue, oclHandles.kernel[index] , work_dim, 0, g_work_size, l_work_size, 0, 0, NULL);
+  oclHandles.cl_status = clEnqueueNDRangeKernel( oclHandles.queue, oclHandles.kernel[index] , work_dim, offset, g_work_size, l_work_size, 0, 0, NULL);
   oclHandles.error_str = "exception in clInvokeKernel() ->";
   clErrorHandle(oclHandles.cl_status);
 }
