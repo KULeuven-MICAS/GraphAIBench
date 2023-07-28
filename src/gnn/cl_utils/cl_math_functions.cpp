@@ -101,3 +101,21 @@ void clSaxpy(const int n, const float a, const cl_mem x, cl_mem y, struct oclKer
     optimizeWorkDimentions(work_dim, work_groups_dim, work_groups);
     clInvokeKernel(kernel_name, work_dim, &work_groups.global_work_size[0], &work_groups.local_work_size[0]);
 }
+
+void clVecadd(const int n, const cl_mem x, cl_mem y, struct oclKernelParamStruct work_groups /*= {NULL, NULL}*/){
+    int work_dim = 1;
+    std::string kernel_name = "vecadd";
+    std::string kernel_path = std::string(BIN_DIR) + "/kernels/vecadd.pocl";
+
+    std::cout << "Loading program vecadd: " << kernel_path <<std::endl;
+    clLoadProgram(kernel_path.c_str(), kernel_name);
+    std::cout << "Program loaded" << std::endl;
+    clSetArgs(kernel_name, 0, (void *) &n, sizeof(int));
+    clSetArgs(kernel_name, 1, (void *) &x, sizeof(cl_mem));
+    clSetArgs(kernel_name, 2, (void *) &y, sizeof(cl_mem));
+    
+    std::cout << "Invoking kernel" << std::endl;
+    int work_groups_dim[1] = {n};
+    optimizeWorkDimentions(work_dim, work_groups_dim, work_groups);
+    clInvokeKernel(kernel_name, work_dim, &work_groups.global_work_size[0], &work_groups.local_work_size[0]);
+}
