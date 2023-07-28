@@ -82,3 +82,22 @@ void clSfilter(const size_t size, const cl_mem src, cl_mem dst, const long long 
     size_t offset[2] = {1,1};
     clInvokeKernel(kernel_name, work_dim, &work_groups.global_work_size[0], &work_groups.local_work_size[0], &offset[0]);
 }
+
+void clSaxpy(const int n, const float a, const cl_mem x, cl_mem y, struct oclKernelParamStruct work_groups /*= {NULL, NULL}*/){
+    int work_dim = 1;
+    std::string kernel_name = "saxpy";
+    std::string kernel_path = std::string(BIN_DIR) + "/kernels/saxpy.pocl";
+
+    std::cout << "Loading program saxpy: " << kernel_path <<std::endl;
+    clLoadProgram(kernel_path.c_str(), kernel_name);
+    std::cout << "Program loaded" << std::endl;
+    clSetArgs(kernel_name, 0, (void *) &n, sizeof(int));
+    clSetArgs(kernel_name, 1, (void *) &a, sizeof(float));
+    clSetArgs(kernel_name, 2, (void *) &x, sizeof(cl_mem));
+    clSetArgs(kernel_name, 3, (void *) &y, sizeof(cl_mem));
+    
+    std::cout << "Invoking kernel" << std::endl;
+    int work_groups_dim[1] = {n};
+    optimizeWorkDimentions(work_dim, work_groups_dim, work_groups);
+    clInvokeKernel(kernel_name, work_dim, &work_groups.global_work_size[0], &work_groups.local_work_size[0]);
+}
