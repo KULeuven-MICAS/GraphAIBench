@@ -1,4 +1,4 @@
-__kernel void saxpy(int size, __global float *src, __global float *dst)
+__kernel void vecadd(int size, __global float *src, __global float *dst)
 {
     int i = get_global_id(0);
 

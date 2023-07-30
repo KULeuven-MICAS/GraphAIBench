@@ -119,3 +119,23 @@ void clVecadd(const int n, const cl_mem x, cl_mem y, struct oclKernelParamStruct
     optimizeWorkDimentions(work_dim, work_groups_dim, work_groups);
     clInvokeKernel(kernel_name, work_dim, &work_groups.global_work_size[0], &work_groups.local_work_size[0]);
 }
+
+void clNearestNeighbor(const int numRecords, const cl_mem locations, cl_mem distances, const float lat, const float lng, struct oclKernelParamStruct work_groups /*= {NULL, NULL}*/){
+    int work_dim = 1;
+    std::string kernel_name = "nearestNeighbor";
+    std::string kernel_path = std::string(BIN_DIR) + "/kernels/nearn.pocl";
+
+    std::cout << "Loading program nearestNeighbor: " << kernel_path <<std::endl;
+    clLoadProgram(kernel_path.c_str(), kernel_name);
+    std::cout << "Program loaded" << std::endl;
+    clSetArgs(kernel_name, 0, (void *) &locations, sizeof(cl_mem));
+    clSetArgs(kernel_name, 1, (void *) &distances, sizeof(cl_mem));
+    clSetArgs(kernel_name, 2, (void *) &numRecords, sizeof(int));
+    clSetArgs(kernel_name, 3, (void *) &lat, sizeof(float));
+    clSetArgs(kernel_name, 4, (void *) &lng, sizeof(float));
+    
+    std::cout << "Invoking kernel" << std::endl;
+    int work_groups_dim[1] = {numRecords};
+    optimizeWorkDimentions(work_dim, work_groups_dim, work_groups);
+    clInvokeKernel(kernel_name, work_dim, &work_groups.global_work_size[0], &work_groups.local_work_size[0]);
+}
