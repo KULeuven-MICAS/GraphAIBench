@@ -139,3 +139,41 @@ void clNearestNeighbor(const int numRecords, const cl_mem locations, cl_mem dist
     optimizeWorkDimentions(work_dim, work_groups_dim, work_groups);
     clInvokeKernel(kernel_name, work_dim, &work_groups.global_work_size[0], &work_groups.local_work_size[0]);
 }
+
+void clRelu(const int n, const cl_mem x, cl_mem y, struct oclKernelParamStruct work_groups /*= {NULL, NULL}*/){
+    int work_dim = 1;
+    std::string kernel_name = "relu";
+    std::string kernel_path = std::string(BIN_DIR) + "/kernels/relu.pocl";
+
+    std::cout << "Loading program relu: " << kernel_path <<std::endl;
+    clLoadProgram(kernel_path.c_str(), kernel_name);
+    std::cout << "Program loaded" << std::endl;
+    clSetArgs(kernel_name, 0, (void *) &n, sizeof(int));
+    clSetArgs(kernel_name, 1, (void *) &x, sizeof(cl_mem));
+    clSetArgs(kernel_name, 2, (void *) &y, sizeof(cl_mem));
+    
+    std::cout << "Invoking kernel" << std::endl;
+    int work_groups_dim[1] = {n};
+    optimizeWorkDimentions(work_dim, work_groups_dim, work_groups);
+    clInvokeKernel(kernel_name, work_dim, &work_groups.global_work_size[0], &work_groups.local_work_size[0]);
+}
+
+void clBiasAdd(const int x, const int y, const cl_mem A, const cl_mem B, cl_mem C, struct oclKernelParamStruct work_groups /*= {NULL, NULL}*/){
+    int work_dim = 2;
+    std::string kernel_name = "badd";
+    std::string kernel_path = std::string(BIN_DIR) + "/kernels/badd.pocl";
+
+    std::cout << "Loading program badd: " << kernel_path <<std::endl;
+    clLoadProgram(kernel_path.c_str(), kernel_name);
+    std::cout << "Program loaded" << std::endl;
+    clSetArgs(kernel_name, 0, (void *) &x, sizeof(int));
+    clSetArgs(kernel_name, 1, (void *) &y, sizeof(int));
+    clSetArgs(kernel_name, 2, (void *) &A, sizeof(cl_mem));
+    clSetArgs(kernel_name, 3, (void *) &B, sizeof(cl_mem));
+    clSetArgs(kernel_name, 4, (void *) &C, sizeof(cl_mem));
+    
+    std::cout << "Invoking kernel" << std::endl;
+    int work_groups_dim[2] = {x, y};
+    optimizeWorkDimentions(work_dim, work_groups_dim, work_groups);
+    clInvokeKernel(kernel_name, work_dim, &work_groups.global_work_size[0], &work_groups.local_work_size[0]);
+}

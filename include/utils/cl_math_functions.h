@@ -7,3 +7,5 @@ void clSfilter(const size_t size, const cl_mem src, cl_mem dst, const long long 
 void clSaxpy(const int n, const float a, const cl_mem x, cl_mem y, struct oclKernelParamStruct work_groups = {NULL, NULL});
 void clVecadd(const int n, const cl_mem x, cl_mem y, struct oclKernelParamStruct work_groups = {NULL, NULL});
 void clNearestNeighbor(const int numRecords, const cl_mem locations, cl_mem distances, const float lat, const float lng, struct oclKernelParamStruct work_groups = {NULL, NULL});
+void clRelu(const int n, const cl_mem x, cl_mem y, struct oclKernelParamStruct work_groups = {NULL, NULL});
+void clBiasAdd(const int x, const int y, const cl_mem A, const cl_mem B, cl_mem C, struct oclKernelParamStruct work_groups = {NULL, NULL});
