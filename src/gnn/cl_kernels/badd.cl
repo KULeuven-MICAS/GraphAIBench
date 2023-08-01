@@ -1,4 +1,4 @@
-__kernel void sgemm (int x, 
+__kernel void badd (int x, 
                      int y,
                      __global const float *A,
 	                   __global const float *B,
